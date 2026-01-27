@@ -1,6 +1,6 @@
 {
-    "name": "morphic_voice_agent",
-    "short_name": "morphic_voice_agent",
+    "name": "kindred_voice_agent",
+    "short_name": "kindred_voice_agent",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
