@@ -20,6 +20,7 @@ import 'account.dart' as _i5;
 import 'expense.dart' as _i6;
 import 'greetings/greeting.dart' as _i7;
 import 'product.dart' as _i8;
+import 'package:kindred_butler_server/src/generated/product.dart' as _i9;
 export 'account.dart';
 export 'expense.dart';
 export 'greetings/greeting.dart';
@@ -319,6 +320,10 @@ class Protocol extends _i1.SerializationManagerServer {
     }
     if (t == _i1.getType<_i8.Product?>()) {
       return (data != null ? _i8.Product.fromJson(data) : null) as T;
+    }
+    if (t == List<_i9.Product>) {
+      return (data as List).map((e) => deserialize<_i9.Product>(e)).toList()
+          as T;
     }
     try {
       return _i3.Protocol().deserialize<T>(data, t);

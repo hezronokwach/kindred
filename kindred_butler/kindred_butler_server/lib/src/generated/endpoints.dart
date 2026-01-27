@@ -13,11 +13,13 @@
 import 'package:serverpod/serverpod.dart' as _i1;
 import '../auth/email_idp_endpoint.dart' as _i2;
 import '../auth/jwt_refresh_endpoint.dart' as _i3;
-import '../greetings/greeting_endpoint.dart' as _i4;
+import '../endpoints/product_endpoint.dart' as _i4;
+import '../greetings/greeting_endpoint.dart' as _i5;
+import 'package:kindred_butler_server/src/generated/product.dart' as _i6;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
-    as _i5;
+    as _i7;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
-    as _i6;
+    as _i8;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -35,7 +37,13 @@ class Endpoints extends _i1.EndpointDispatch {
           'jwtRefresh',
           null,
         ),
-      'greeting': _i4.GreetingEndpoint()
+      'product': _i4.ProductEndpoint()
+        ..initialize(
+          server,
+          'product',
+          null,
+        ),
+      'greeting': _i5.GreetingEndpoint()
         ..initialize(
           server,
           'greeting',
@@ -236,6 +244,142 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
+    connectors['product'] = _i1.EndpointConnector(
+      name: 'product',
+      endpoint: endpoints['product']!,
+      methodConnectors: {
+        'getAllProducts': _i1.MethodConnector(
+          name: 'getAllProducts',
+          params: {},
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['product'] as _i4.ProductEndpoint)
+                  .getAllProducts(session),
+        ),
+        'getProductById': _i1.MethodConnector(
+          name: 'getProductById',
+          params: {
+            'id': _i1.ParameterDescription(
+              name: 'id',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['product'] as _i4.ProductEndpoint).getProductById(
+                    session,
+                    params['id'],
+                  ),
+        ),
+        'getProductsByName': _i1.MethodConnector(
+          name: 'getProductsByName',
+          params: {
+            'name': _i1.ParameterDescription(
+              name: 'name',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['product'] as _i4.ProductEndpoint)
+                  .getProductsByName(
+                    session,
+                    params['name'],
+                  ),
+        ),
+        'createProduct': _i1.MethodConnector(
+          name: 'createProduct',
+          params: {
+            'product': _i1.ParameterDescription(
+              name: 'product',
+              type: _i1.getType<_i6.Product>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['product'] as _i4.ProductEndpoint).createProduct(
+                    session,
+                    params['product'],
+                  ),
+        ),
+        'updateProduct': _i1.MethodConnector(
+          name: 'updateProduct',
+          params: {
+            'product': _i1.ParameterDescription(
+              name: 'product',
+              type: _i1.getType<_i6.Product>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['product'] as _i4.ProductEndpoint).updateProduct(
+                    session,
+                    params['product'],
+                  ),
+        ),
+        'deleteProduct': _i1.MethodConnector(
+          name: 'deleteProduct',
+          params: {
+            'id': _i1.ParameterDescription(
+              name: 'id',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['product'] as _i4.ProductEndpoint).deleteProduct(
+                    session,
+                    params['id'],
+                  ),
+        ),
+        'updateStock': _i1.MethodConnector(
+          name: 'updateStock',
+          params: {
+            'productId': _i1.ParameterDescription(
+              name: 'productId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'newStockCount': _i1.ParameterDescription(
+              name: 'newStockCount',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['product'] as _i4.ProductEndpoint).updateStock(
+                    session,
+                    params['productId'],
+                    params['newStockCount'],
+                  ),
+        ),
+      },
+    );
     connectors['greeting'] = _i1.EndpointConnector(
       name: 'greeting',
       endpoint: endpoints['greeting']!,
@@ -253,16 +397,16 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greeting'] as _i4.GreetingEndpoint).hello(
+              ) async => (endpoints['greeting'] as _i5.GreetingEndpoint).hello(
                 session,
                 params['name'],
               ),
         ),
       },
     );
-    modules['serverpod_auth_idp'] = _i5.Endpoints()
+    modules['serverpod_auth_idp'] = _i7.Endpoints()
       ..initializeEndpoints(server);
-    modules['serverpod_auth_core'] = _i6.Endpoints()
+    modules['serverpod_auth_core'] = _i8.Endpoints()
       ..initializeEndpoints(server);
   }
 }
