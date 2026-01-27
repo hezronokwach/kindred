@@ -12,65 +12,16 @@ class ServerpodService {
 
   static Future<void> _initializeSampleData() async {
     try {
-      // Check if products exist
-      final products = await _client.product.getAllProducts();
-      if (products.isEmpty) {
-        await _insertSampleProducts();
-      }
-
-      // Check if account exists
-      final account = await _client.account.getAccount();
-      if (account == null) {
-        await _client.account.updateBalance(10000.00);
-      }
+      // Use the seed endpoint to initialize data
+      final result = await _client.seed.seedDatabase();
+      print('Seeding result: $result');
     } catch (e) {
       // Silently handle initialization errors
+      print('Seeding failed: $e');
     }
   }
 
-  static Future<void> _insertSampleProducts() async {
-    final sampleProducts = [
-      Product(
-        name: 'Nike Air Max 270',
-        stockCount: 15,
-        price: 120.00,
-        imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-        category: 'shoes',
-      ),
-      Product(
-        name: 'Adidas Ultraboost 22',
-        stockCount: 8,
-        price: 180.00,
-        imageUrl: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa',
-        category: 'shoes',
-      ),
-      Product(
-        name: 'Converse Chuck Taylor',
-        stockCount: 25,
-        price: 65.00,
-        imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772',
-        category: 'shoes',
-      ),
-      Product(
-        name: 'Vans Old Skool',
-        stockCount: 12,
-        price: 60.00,
-        imageUrl: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77',
-        category: 'shoes',
-      ),
-      Product(
-        name: 'Puma RS-X',
-        stockCount: 6,
-        price: 110.00,
-        imageUrl: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519',
-        category: 'shoes',
-      ),
-    ];
 
-    for (final product in sampleProducts) {
-      await _client.product.createProduct(product);
-    }
-  }
 
   // Product operations
   static Future<List<Product>> getProducts() async {
@@ -118,6 +69,15 @@ class ServerpodService {
 
   static Future<Account?> subtractFromBalance(double amount) async {
     return await _client.account.subtractFromBalance(amount);
+  }
+
+  // Seed operations
+  static Future<String> seedDatabase() async {
+    return await _client.seed.seedDatabase();
+  }
+
+  static Future<String> resetDatabase() async {
+    return await _client.seed.resetDatabase();
   }
 
   // Expense operations

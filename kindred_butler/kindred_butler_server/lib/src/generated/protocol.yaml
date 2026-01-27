@@ -28,5 +28,8 @@ product:
   - updateProduct:
   - deleteProduct:
   - updateStock:
+seed:
+  - seedDatabase:
+  - resetDatabase:
 greeting:
   - hello:

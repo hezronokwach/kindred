@@ -388,6 +388,26 @@ class EndpointProduct extends _i2.EndpointRef {
   );
 }
 
+/// {@category Endpoint}
+class EndpointSeed extends _i2.EndpointRef {
+  EndpointSeed(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'seed';
+
+  _i3.Future<String> seedDatabase() => caller.callServerEndpoint<String>(
+    'seed',
+    'seedDatabase',
+    {},
+  );
+
+  _i3.Future<String> resetDatabase() => caller.callServerEndpoint<String>(
+    'seed',
+    'resetDatabase',
+    {},
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -451,6 +471,7 @@ class Client extends _i2.ServerpodClientShared {
     account = EndpointAccount(this);
     expense = EndpointExpense(this);
     product = EndpointProduct(this);
+    seed = EndpointSeed(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -465,6 +486,8 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointProduct product;
 
+  late final EndpointSeed seed;
+
   late final EndpointGreeting greeting;
 
   late final Modules modules;
@@ -476,6 +499,7 @@ class Client extends _i2.ServerpodClientShared {
     'account': account,
     'expense': expense,
     'product': product,
+    'seed': seed,
     'greeting': greeting,
   };
 
