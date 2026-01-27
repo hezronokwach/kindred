@@ -1,4 +1,4 @@
-import 'package:morphic_butler_client/morphic_butler_client.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart';
 import 'package:flutter/material.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';

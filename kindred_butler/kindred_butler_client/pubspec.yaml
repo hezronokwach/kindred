@@ -1,4 +1,4 @@
-name: morphic_butler_client
+name: kindred_butler_client
 description: Starting point for a Serverpod client.
 
 environment:

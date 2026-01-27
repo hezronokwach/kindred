@@ -1,0 +1,16 @@
+class: Product
+table: products
+fields:
+  name: String
+  stockCount: int
+  price: double
+  imageUrl: String?
+  category: String?
+  createdAt: DateTime, default=now
+indexes:
+  product_name_idx:
+    fields: name
+  product_category_idx:
+    fields: category
+  product_stock_idx:
+    fields: stockCount

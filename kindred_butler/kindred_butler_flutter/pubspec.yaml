@@ -1,4 +1,4 @@
-name: morphic_butler_flutter
+name: kindred_butler_flutter
 description: A new Flutter project with Serverpod.
 
 # The following line prevents the package from being accidentally published to
@@ -27,8 +27,8 @@ dependencies:
   cupertino_icons: ^1.0.5
   flutter:
     sdk: flutter
-  morphic_butler_client:
-    path: ../morphic_butler_client
+  kindred_butler_client:
+    path: ../kindred_butler_client
   serverpod_auth_idp_flutter: 3.2.3
   serverpod_flutter: 3.2.3
 
