@@ -8,5 +8,13 @@ emailIdp:
   - finishPasswordReset:
 jwtRefresh:
   - refreshAccessToken:
+product:
+  - getAllProducts:
+  - getProductById:
+  - getProductsByName:
+  - createProduct:
+  - updateProduct:
+  - deleteProduct:
+  - updateStock:
 greeting:
   - hello:

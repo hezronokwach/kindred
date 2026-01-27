@@ -16,9 +16,10 @@ import 'package:serverpod_client/serverpod_client.dart' as _i2;
 import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
-import 'package:morphic_butler_client/src/protocol/greetings/greeting.dart'
-    as _i5;
-import 'protocol.dart' as _i6;
+import 'package:kindred_butler_client/src/protocol/product.dart' as _i5;
+import 'package:kindred_butler_client/src/protocol/greetings/greeting.dart'
+    as _i6;
+import 'protocol.dart' as _i7;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -234,6 +235,67 @@ class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
   );
 }
 
+/// {@category Endpoint}
+class EndpointProduct extends _i2.EndpointRef {
+  EndpointProduct(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'product';
+
+  _i3.Future<List<_i5.Product>> getAllProducts() =>
+      caller.callServerEndpoint<List<_i5.Product>>(
+        'product',
+        'getAllProducts',
+        {},
+      );
+
+  _i3.Future<_i5.Product?> getProductById(int id) =>
+      caller.callServerEndpoint<_i5.Product?>(
+        'product',
+        'getProductById',
+        {'id': id},
+      );
+
+  _i3.Future<List<_i5.Product>> getProductsByName(String name) =>
+      caller.callServerEndpoint<List<_i5.Product>>(
+        'product',
+        'getProductsByName',
+        {'name': name},
+      );
+
+  _i3.Future<_i5.Product> createProduct(_i5.Product product) =>
+      caller.callServerEndpoint<_i5.Product>(
+        'product',
+        'createProduct',
+        {'product': product},
+      );
+
+  _i3.Future<_i5.Product> updateProduct(_i5.Product product) =>
+      caller.callServerEndpoint<_i5.Product>(
+        'product',
+        'updateProduct',
+        {'product': product},
+      );
+
+  _i3.Future<void> deleteProduct(int id) => caller.callServerEndpoint<void>(
+    'product',
+    'deleteProduct',
+    {'id': id},
+  );
+
+  _i3.Future<_i5.Product?> updateStock(
+    int productId,
+    int newStockCount,
+  ) => caller.callServerEndpoint<_i5.Product?>(
+    'product',
+    'updateStock',
+    {
+      'productId': productId,
+      'newStockCount': newStockCount,
+    },
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -244,8 +306,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i5.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i5.Greeting>(
+  _i3.Future<_i6.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i6.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -283,7 +345,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i6.Protocol(),
+         _i7.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -294,6 +356,7 @@ class Client extends _i2.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    product = EndpointProduct(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -301,6 +364,8 @@ class Client extends _i2.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointProduct product;
 
   late final EndpointGreeting greeting;
 
@@ -310,6 +375,7 @@ class Client extends _i2.ServerpodClientShared {
   Map<String, _i2.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'product': product,
     'greeting': greeting,
   };
 
