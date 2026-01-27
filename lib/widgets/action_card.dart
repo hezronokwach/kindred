@@ -153,7 +153,7 @@ class ActionCard extends StatelessWidget {
       final quantity = actionData['quantity'] ?? 0;
       final productPrice = actionData['product_price'] ?? 0.0;
       final totalCost = quantity * productPrice;
-      return await Account.canAfford(totalCost);
+      return await AccountHelper.canAfford(totalCost);
     }
     return true;
   }
@@ -194,7 +194,7 @@ class ActionCard extends StatelessWidget {
         final newStock = currentStock + quantity;
         final productPrice = actionData['product_price'] ?? actionData['price'] ?? 0.0;
         final totalCost = quantity * productPrice;
-        final availableFunds = await Account.getAvailableFunds();
+        final availableFunds = await AccountHelper.getAvailableFunds();
         
         return 'Add $quantity units to $productName?\n'
                'Cost: \$${totalCost.toStringAsFixed(2)}\n'

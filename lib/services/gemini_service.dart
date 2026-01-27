@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/morphic_state.dart' as morphic;
 import '../models/business_data.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class GeminiService {
   final String apiKey;
@@ -10,9 +11,9 @@ class GeminiService {
 
   GeminiService({required this.apiKey});
 
-  Future<String> _buildSystemPrompt(List<Product> products, List<Expense> expenses) async {
+  Future<String> _buildSystemPrompt(List<client.Product> products, List<client.Expense> expenses) async {
     final productList = products.map((p) => '${p.name}:\$${p.price},${p.stockCount}').join('|');
-    final balance = (await Account.getAvailableFunds()).toStringAsFixed(0);
+    final balance = (await AccountHelper.getAvailableFunds()).toStringAsFixed(0);
 
     return '''Shoe store assistant. JSON only.
 
@@ -78,7 +79,7 @@ Ex: "can I afford 10 Nike Air Max"→accountBalance,narrative,"10 Nike Air Max c
     }
   }
 
-  Future<morphic.MorphicState> _parseResponse(Map<String, dynamic> response, List<Product> products, List<Expense> expenses) async {
+  Future<morphic.MorphicState> _parseResponse(Map<String, dynamic> response, List<client.Product> products, List<client.Expense> expenses) async {
     final intentStr = response['intent'] ?? 'unknown';
     final uiModeStr = response['ui_mode'] ?? 'narrative';
     final narrative = response['narrative'] ?? 'I\'m not sure how to help with that.';
@@ -138,7 +139,7 @@ Ex: "can I afford 10 Nike Air Max"→accountBalance,narrative,"10 Nike Air Max c
         data['action_type'] = actionType;
         data['action_data'] = {
           'product_name': product.name,
-          'product_id': product.id,
+          'product_id': product.id?.toString() ?? '0',
           'current_stock': product.stockCount,
           'quantity': quantity,
           'price': product.price,
@@ -167,8 +168,8 @@ Ex: "can I afford 10 Nike Air Max"→accountBalance,narrative,"10 Nike Air Max c
           orElse: () => products.first,
         );
         final totalCost = quantity.toDouble() * product.price;
-        final balance = await Account.getAvailableFunds();
-        final canAfford = await Account.canAfford(totalCost);
+        final balance = await AccountHelper.getAvailableFunds();
+        final canAfford = await AccountHelper.canAfford(totalCost);
         
         final affordabilityText = canAfford 
           ? '$quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)}. Yes, you can afford it!'
