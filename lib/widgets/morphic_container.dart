@@ -183,7 +183,7 @@ class MorphicContainer extends StatelessWidget {
               child: const Column(
                 children: [
                   Text(
-                    'Welcome to Morphic AI',
+                    'Welcome to Kindred AI',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

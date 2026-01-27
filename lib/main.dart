@@ -206,7 +206,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Morphic Voice Agent',
+      title: 'Kindred Voice Agent',
       theme: AppTheme.theme,
       home: const MyHomePage(),
       debugShowCheckedModeBanner: false,

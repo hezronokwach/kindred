@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../widgets/morphic_container.dart';
-import '../utils/demo_mode.dart';
 import '../utils/app_theme.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -118,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.md, vertical: AppTheme.sm),
       child: const Text(
-        'MORPHIC AI',
+        'KINDRED AI',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
