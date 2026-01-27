@@ -1,89 +1,41 @@
-import '../services/supabase_service.dart';
+import '../services/serverpod_service.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
-class Product {
-  final String id;
-  final String name;
-  final int stockCount;
-  final double price;
-  final String imageUrl;
-  final String category;
+// Re-export Serverpod models for compatibility
+export 'package:kindred_butler_client/kindred_butler_client.dart' show Product, Expense, Account;
 
-  Product({
-    required this.id,
-    required this.name,
-    required this.stockCount,
-    required this.price,
-    required this.imageUrl,
-    required this.category,
-  });
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      id: json['id'],
-      name: json['name'],
-      stockCount: json['stock_count'],
-      price: (json['price'] as num).toDouble(),
-      imageUrl: json['image_url'],
-      category: json['category'],
-    );
+class BusinessData {
+  static Future<List<client.Product>> getProducts() async {
+    return await ServerpodService.getProducts();
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'stock_count': stockCount,
-      'price': price,
-      'image_url': imageUrl,
-      'category': category,
-    };
+  static Future<client.Product?> updateStock(int productId, int newStock) async {
+    return await ServerpodService.updateProductStock(productId, newStock);
+  }
+
+  static Future<bool> deleteProduct(int productId) async {
+    return await ServerpodService.deleteProduct(productId);
+  }
+
+  static Future<client.Product> addProduct(client.Product product) async {
+    return await ServerpodService.addProduct(product);
+  }
+
+  static Future<List<client.Expense>> getExpenses() async {
+    return await ServerpodService.getExpenses();
   }
 }
 
-class Expense {
-  final String? id;
-  final String category;
-  final double amount;
-  final DateTime date;
-  final String description;
-
-  Expense({
-    this.id,
-    required this.category,
-    required this.amount,
-    required this.date,
-    required this.description,
-  });
-
-  factory Expense.fromJson(Map<String, dynamic> json) {
-    return Expense(
-      id: json['id']?.toString(),
-      category: json['category'],
-      amount: (json['amount'] as num).toDouble(),
-      date: DateTime.parse(json['date']),
-      description: json['description'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'category': category,
-      'amount': amount,
-      'date': date.toIso8601String(),
-      'description': description,
-    };
-  }
-}
-
-class Account {
+class AccountHelper {
   static Future<double> getAvailableFunds() async {
-    return await SupabaseService.getAccountBalance();
+    return await ServerpodService.getAccountBalance();
   }
   
   static Future<void> debit(double amount, String description, String productName) async {
-    final currentBalance = await getAvailableFunds();
-    final newBalance = currentBalance - amount;
-    await SupabaseService.updateAccountBalance(newBalance);
+    final result = await ServerpodService.subtractFromBalance(amount);
+    if (result == null) {
+      throw Exception('Insufficient funds');
+    }
     
     // Extract brand/supplier from product name
     String supplier = 'General Supplier';
@@ -93,40 +45,17 @@ class Account {
       supplier = '$brand Supplier';
     }
     
-    final expense = Expense(
+    final expense = client.Expense(
       category: supplier,
       amount: amount,
       date: DateTime.now(),
-      description: description,
     );
     
-    await SupabaseService.addExpense(expense);
+    await ServerpodService.addExpense(expense);
   }
   
   static Future<bool> canAfford(double amount) async {
     final balance = await getAvailableFunds();
     return balance >= amount;
-  }
-}
-
-class BusinessData {
-  static Future<List<Product>> getProducts() async {
-    return await SupabaseService.getProducts();
-  }
-
-  static Future<void> updateStock(String productId, int newStock) async {
-    await SupabaseService.updateProductStock(productId, newStock);
-  }
-
-  static Future<void> deleteProduct(String productId) async {
-    await SupabaseService.deleteProduct(productId);
-  }
-
-  static Future<void> addProduct(Product product) async {
-    await SupabaseService.addProduct(product);
-  }
-
-  static Future<List<Expense>> getExpenses() async {
-    return await SupabaseService.getExpenses();
   }
 }

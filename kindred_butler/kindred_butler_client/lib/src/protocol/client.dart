@@ -369,7 +369,7 @@ class EndpointProduct extends _i2.EndpointRef {
         {'product': product},
       );
 
-  _i3.Future<void> deleteProduct(int id) => caller.callServerEndpoint<void>(
+  _i3.Future<bool> deleteProduct(int id) => caller.callServerEndpoint<bool>(
     'product',
     'deleteProduct',
     {'id': id},

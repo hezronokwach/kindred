@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/business_data.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class ProductImageCard extends StatelessWidget {
-  final Product product;
+  final client.Product product;
   final VoidCallback? onConfirm;
 
   const ProductImageCard({
@@ -23,7 +23,7 @@ class ProductImageCard extends StatelessWidget {
             Hero(
               tag: 'product_${product.id}',
               child: Image.network(
-                product.imageUrl,
+                product.imageUrl ?? 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -74,7 +74,7 @@ class ProductImageCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Category: ${product.category}',
+                    'Category: ${product.category ?? 'Unknown'}',
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   if (onConfirm != null) ...[

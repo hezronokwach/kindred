@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/morphic_state.dart';
-import '../models/business_data.dart';
 import 'inventory_table.dart';
 import 'finance_chart.dart';
 import 'product_image_card.dart';
 import 'action_card.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class MorphicContainer extends StatelessWidget {
   final MorphicState state;
@@ -81,15 +81,15 @@ class MorphicContainer extends StatelessWidget {
   Widget _getWidgetForMode() {
     switch (state.uiMode) {
       case UIMode.table:
-        final products = state.data['products'] as List<Product>? ?? [];
+        final products = state.data['products'] as List<client.Product>? ?? [];
         return InventoryTable(products: products);
 
       case UIMode.chart:
-        final expenses = state.data['expenses'] as List<Expense>? ?? [];
+        final expenses = state.data['expenses'] as List<client.Expense>? ?? [];
         return FinanceChart(expenses: expenses);
 
       case UIMode.image:
-        final product = state.data['product'] as Product?;
+        final product = state.data['product'] as client.Product?;
         if (product != null) {
           return ProductImageCard(product: product);
         }

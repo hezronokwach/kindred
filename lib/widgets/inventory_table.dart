@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/business_data.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class InventoryTable extends StatelessWidget {
-  final List<Product> products;
+  final List<client.Product> products;
 
   const InventoryTable({super.key, required this.products});
 
@@ -24,7 +24,7 @@ class InventoryTable extends StatelessWidget {
                 DataCell(Text(product.name)),
                 DataCell(Text('${product.stockCount}')),
                 DataCell(Text('\$${product.price.toStringAsFixed(2)}')),
-                DataCell(Text(product.category)),
+                DataCell(Text(product.category ?? 'Unknown')),
               ],
             );
           }).toList(),

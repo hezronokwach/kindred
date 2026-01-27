@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../models/business_data.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class FinanceChart extends StatelessWidget {
-  final List<Expense> expenses;
+  final List<client.Expense> expenses;
 
   const FinanceChart({super.key, required this.expenses});
 

@@ -6,21 +6,18 @@ import 'models/business_data.dart';
 import 'services/gemini_service.dart';
 import 'services/speech_service.dart';
 import 'services/elevenlabs_service.dart';
-import 'services/supabase_service.dart';
+import 'services/serverpod_service.dart';
 import 'screens/home_screen.dart';
 import 'utils/app_theme.dart';
+import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   
-  // Initialize Supabase
-  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-  
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-    await SupabaseService.initialize(supabaseUrl, supabaseAnonKey);
-  }
+  // Initialize Serverpod
+  final serverUrl = dotenv.env['SERVERPOD_URL'] ?? 'http://localhost:8080';
+  await ServerpodService.initialize(serverUrl);
   
   runApp(
     ChangeNotifierProvider(
@@ -59,7 +56,7 @@ class AppState extends ChangeNotifier {
     
     for (var product in products) {
       try {
-        await precacheImage(NetworkImage(product.imageUrl), context);
+        await precacheImage(NetworkImage(product.imageUrl ?? 'https://images.unsplash.com/photo-1542291026-7eec264c27ff'), context);
       } catch (e) {
         // Silently handle image preload failures
       }
@@ -106,8 +103,8 @@ class AppState extends ChangeNotifier {
         final totalCost = quantity * productPrice;
         final newStock = currentStock + quantity;
         
-        if (!(await Account.canAfford(totalCost))) {
-          final availableFunds = await Account.getAvailableFunds();
+        if (!(await AccountHelper.canAfford(totalCost))) {
+          final availableFunds = await AccountHelper.getAvailableFunds();
           _currentState = morphic.MorphicState(
             intent: morphic.Intent.unknown,
             uiMode: morphic.UIMode.narrative,
@@ -116,9 +113,10 @@ class AppState extends ChangeNotifier {
             confidence: 1.0,
           );
         } else if (productId != null) {
-          await BusinessData.updateStock(productId, newStock);
-          await Account.debit(totalCost, 'Purchased $quantity units of $productName', productName);
-          final newBalance = await Account.getAvailableFunds();
+          final productIdInt = int.tryParse(productId) ?? 0;
+          await BusinessData.updateStock(productIdInt, newStock);
+          await AccountHelper.debit(totalCost, 'Purchased $quantity units of $productName', productName);
+          final newBalance = await AccountHelper.getAvailableFunds();
           _currentState = morphic.MorphicState(
             intent: morphic.Intent.inventory,
             uiMode: morphic.UIMode.narrative,
@@ -130,7 +128,8 @@ class AppState extends ChangeNotifier {
         break;
       case 'deleteProduct':
         if (productId != null) {
-          await BusinessData.deleteProduct(productId);
+          final productIdInt = int.tryParse(productId) ?? 0;
+          await BusinessData.deleteProduct(productIdInt);
           _currentState = morphic.MorphicState(
             intent: morphic.Intent.inventory,
             uiMode: morphic.UIMode.narrative,
@@ -145,8 +144,8 @@ class AppState extends ChangeNotifier {
         final productPrice = actionData['product_price'] as double;
         final totalCost = quantity * productPrice;
         
-        if (!(await Account.canAfford(totalCost))) {
-          final availableFunds = await Account.getAvailableFunds();
+        if (!(await AccountHelper.canAfford(totalCost))) {
+          final availableFunds = await AccountHelper.getAvailableFunds();
           _currentState = morphic.MorphicState(
             intent: morphic.Intent.unknown,
             uiMode: morphic.UIMode.narrative,
@@ -155,8 +154,7 @@ class AppState extends ChangeNotifier {
             confidence: 1.0,
           );
         } else {
-          final newProduct = Product(
-            id: actionData['product_id'] as String,
+          final newProduct = client.Product(
             name: productName,
             stockCount: quantity,
             price: productPrice,
@@ -164,8 +162,8 @@ class AppState extends ChangeNotifier {
             category: 'shoes',
           );
           await BusinessData.addProduct(newProduct);
-          await Account.debit(totalCost, 'Purchased $quantity units of $productName', productName);
-          final newBalance = await Account.getAvailableFunds();
+          await AccountHelper.debit(totalCost, 'Purchased $quantity units of $productName', productName);
+          final newBalance = await AccountHelper.getAvailableFunds();
           _currentState = morphic.MorphicState(
             intent: morphic.Intent.inventory,
             uiMode: morphic.UIMode.narrative,

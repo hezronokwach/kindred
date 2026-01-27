@@ -29,11 +29,12 @@ class ProductEndpoint extends Endpoint {
     return await Product.db.updateRow(session, product);
   }
 
-  Future<void> deleteProduct(Session session, int id) async {
-    await Product.db.deleteWhere(
+  Future<bool> deleteProduct(Session session, int id) async {
+    final deletedProducts = await Product.db.deleteWhere(
       session,
       where: (t) => t.id.equals(id),
     );
+    return deletedProducts.isNotEmpty;
   }
 
   Future<Product?> updateStock(

@@ -963,7 +963,7 @@ class _ProductEndpoint {
     });
   }
 
-  _i3.Future<void> deleteProduct(
+  _i3.Future<bool> deleteProduct(
     _i1.TestSessionBuilder sessionBuilder,
     int id,
   ) async {
@@ -986,7 +986,7 @@ class _ProductEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<void>);
+                as _i3.Future<bool>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
