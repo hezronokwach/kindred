@@ -1,0 +1,11 @@
+class: Expense
+table: expenses
+fields:
+  category: String
+  amount: double
+  date: DateTime, default=now
+indexes:
+  expense_category_idx:
+    fields: category
+  expense_date_idx:
+    fields: date

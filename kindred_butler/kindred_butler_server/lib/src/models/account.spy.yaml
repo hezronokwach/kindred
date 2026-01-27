@@ -1,0 +1,5 @@
+class: Account
+table: account
+fields:
+  balance: double, default=10000.0
+  updatedAt: DateTime, default=now
