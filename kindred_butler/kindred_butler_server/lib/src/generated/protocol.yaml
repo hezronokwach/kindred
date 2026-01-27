@@ -8,6 +8,18 @@ emailIdp:
   - finishPasswordReset:
 jwtRefresh:
   - refreshAccessToken:
+account:
+  - getAccount:
+  - updateBalance:
+  - addToBalance:
+  - subtractFromBalance:
+expense:
+  - getAllExpenses:
+  - getExpensesByCategory:
+  - getExpensesByDateRange:
+  - createExpense:
+  - updateExpense:
+  - deleteExpense:
 product:
   - getAllProducts:
   - getProductById:

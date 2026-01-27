@@ -16,10 +16,12 @@ import 'package:serverpod_client/serverpod_client.dart' as _i2;
 import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
-import 'package:kindred_butler_client/src/protocol/product.dart' as _i5;
+import 'package:kindred_butler_client/src/protocol/account.dart' as _i5;
+import 'package:kindred_butler_client/src/protocol/expense.dart' as _i6;
+import 'package:kindred_butler_client/src/protocol/product.dart' as _i7;
 import 'package:kindred_butler_client/src/protocol/greetings/greeting.dart'
-    as _i6;
-import 'protocol.dart' as _i7;
+    as _i8;
+import 'protocol.dart' as _i9;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -236,42 +238,132 @@ class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
 }
 
 /// {@category Endpoint}
+class EndpointAccount extends _i2.EndpointRef {
+  EndpointAccount(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'account';
+
+  _i3.Future<_i5.Account?> getAccount() =>
+      caller.callServerEndpoint<_i5.Account?>(
+        'account',
+        'getAccount',
+        {},
+      );
+
+  _i3.Future<_i5.Account> updateBalance(double newBalance) =>
+      caller.callServerEndpoint<_i5.Account>(
+        'account',
+        'updateBalance',
+        {'newBalance': newBalance},
+      );
+
+  _i3.Future<_i5.Account> addToBalance(double amount) =>
+      caller.callServerEndpoint<_i5.Account>(
+        'account',
+        'addToBalance',
+        {'amount': amount},
+      );
+
+  _i3.Future<_i5.Account?> subtractFromBalance(double amount) =>
+      caller.callServerEndpoint<_i5.Account?>(
+        'account',
+        'subtractFromBalance',
+        {'amount': amount},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointExpense extends _i2.EndpointRef {
+  EndpointExpense(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'expense';
+
+  _i3.Future<List<_i6.Expense>> getAllExpenses() =>
+      caller.callServerEndpoint<List<_i6.Expense>>(
+        'expense',
+        'getAllExpenses',
+        {},
+      );
+
+  _i3.Future<List<_i6.Expense>> getExpensesByCategory(String category) =>
+      caller.callServerEndpoint<List<_i6.Expense>>(
+        'expense',
+        'getExpensesByCategory',
+        {'category': category},
+      );
+
+  _i3.Future<List<_i6.Expense>> getExpensesByDateRange(
+    DateTime start,
+    DateTime end,
+  ) => caller.callServerEndpoint<List<_i6.Expense>>(
+    'expense',
+    'getExpensesByDateRange',
+    {
+      'start': start,
+      'end': end,
+    },
+  );
+
+  _i3.Future<_i6.Expense> createExpense(_i6.Expense expense) =>
+      caller.callServerEndpoint<_i6.Expense>(
+        'expense',
+        'createExpense',
+        {'expense': expense},
+      );
+
+  _i3.Future<_i6.Expense?> updateExpense(_i6.Expense expense) =>
+      caller.callServerEndpoint<_i6.Expense?>(
+        'expense',
+        'updateExpense',
+        {'expense': expense},
+      );
+
+  _i3.Future<bool> deleteExpense(int id) => caller.callServerEndpoint<bool>(
+    'expense',
+    'deleteExpense',
+    {'id': id},
+  );
+}
+
+/// {@category Endpoint}
 class EndpointProduct extends _i2.EndpointRef {
   EndpointProduct(_i2.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'product';
 
-  _i3.Future<List<_i5.Product>> getAllProducts() =>
-      caller.callServerEndpoint<List<_i5.Product>>(
+  _i3.Future<List<_i7.Product>> getAllProducts() =>
+      caller.callServerEndpoint<List<_i7.Product>>(
         'product',
         'getAllProducts',
         {},
       );
 
-  _i3.Future<_i5.Product?> getProductById(int id) =>
-      caller.callServerEndpoint<_i5.Product?>(
+  _i3.Future<_i7.Product?> getProductById(int id) =>
+      caller.callServerEndpoint<_i7.Product?>(
         'product',
         'getProductById',
         {'id': id},
       );
 
-  _i3.Future<List<_i5.Product>> getProductsByName(String name) =>
-      caller.callServerEndpoint<List<_i5.Product>>(
+  _i3.Future<List<_i7.Product>> getProductsByName(String name) =>
+      caller.callServerEndpoint<List<_i7.Product>>(
         'product',
         'getProductsByName',
         {'name': name},
       );
 
-  _i3.Future<_i5.Product> createProduct(_i5.Product product) =>
-      caller.callServerEndpoint<_i5.Product>(
+  _i3.Future<_i7.Product> createProduct(_i7.Product product) =>
+      caller.callServerEndpoint<_i7.Product>(
         'product',
         'createProduct',
         {'product': product},
       );
 
-  _i3.Future<_i5.Product> updateProduct(_i5.Product product) =>
-      caller.callServerEndpoint<_i5.Product>(
+  _i3.Future<_i7.Product> updateProduct(_i7.Product product) =>
+      caller.callServerEndpoint<_i7.Product>(
         'product',
         'updateProduct',
         {'product': product},
@@ -283,10 +375,10 @@ class EndpointProduct extends _i2.EndpointRef {
     {'id': id},
   );
 
-  _i3.Future<_i5.Product?> updateStock(
+  _i3.Future<_i7.Product?> updateStock(
     int productId,
     int newStockCount,
-  ) => caller.callServerEndpoint<_i5.Product?>(
+  ) => caller.callServerEndpoint<_i7.Product?>(
     'product',
     'updateStock',
     {
@@ -306,8 +398,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i6.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i6.Greeting>(
+  _i3.Future<_i8.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i8.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -345,7 +437,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i7.Protocol(),
+         _i9.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -356,6 +448,8 @@ class Client extends _i2.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    account = EndpointAccount(this);
+    expense = EndpointExpense(this);
     product = EndpointProduct(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
@@ -364,6 +458,10 @@ class Client extends _i2.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointAccount account;
+
+  late final EndpointExpense expense;
 
   late final EndpointProduct product;
 
@@ -375,6 +473,8 @@ class Client extends _i2.ServerpodClientShared {
   Map<String, _i2.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'account': account,
+    'expense': expense,
     'product': product,
     'greeting': greeting,
   };
