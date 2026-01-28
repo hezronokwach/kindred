@@ -7,6 +7,7 @@ import 'services/gemini_service.dart';
 import 'services/speech_service.dart';
 import 'services/elevenlabs_service.dart';
 import 'services/serverpod_service.dart';
+import 'services/action_service.dart';
 import 'screens/home_screen.dart';
 import 'utils/app_theme.dart';
 import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
@@ -32,14 +33,31 @@ class AppState extends ChangeNotifier {
   final List<String> _conversationHistory = [];
   bool _isProcessing = false;
   String _lastTranscription = '';
+  
+  // Voice settings
+  bool _isVoiceEnabled = true;
+  double _voiceSpeed = 1.0;
 
   late GeminiService _geminiService;
   late SpeechService _speechService;
   late ElevenLabsService _elevenLabsService;
+  late ActionService _actionService;
 
   morphic.MorphicState get currentState => _currentState;
   bool get isProcessing => _isProcessing;
   String get lastTranscription => _lastTranscription;
+  bool get isVoiceEnabled => _isVoiceEnabled;
+  double get voiceSpeed => _voiceSpeed;
+
+  set isVoiceEnabled(bool value) {
+    _isVoiceEnabled = value;
+    notifyListeners();
+  }
+
+  set voiceSpeed(double value) {
+    _voiceSpeed = value;
+    notifyListeners();
+  }
 
   void initialize() {
     final geminiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
@@ -48,6 +66,7 @@ class AppState extends ChangeNotifier {
     _geminiService = GeminiService(apiKey: geminiKey);
     _speechService = SpeechService();
     _elevenLabsService = ElevenLabsService(apiKey: elevenLabsKey);
+    _actionService = ActionService();
   }
 
   Future<void> preloadImages(BuildContext context) async {
@@ -69,10 +88,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _conversationHistory.add(transcription);
+      _conversationHistory.add({'role': 'user', 'parts': [{'text': transcription}]});
       _currentState = await _geminiService.analyzeQuery(transcription);
       notifyListeners();
-      _elevenLabsService.speak(_currentState.narrative);
+      
+      if (_isVoiceEnabled) {
+        _elevenLabsService.speak(_currentState.narrative);
+      }
     } catch (e) {
       _currentState = morphic.MorphicState(
         intent: morphic.Intent.unknown,
@@ -92,91 +114,26 @@ class AppState extends ChangeNotifier {
   }
 
   void handleActionConfirm(String actionType, Map<String, dynamic> actionData) async {
-    final productId = actionData['product_id'] as String?;
-    final productName = actionData['product_name'] as String;
-    
-    switch (actionType) {
-      case 'updateStock':
-        final quantity = actionData['quantity'] as int;
-        final currentStock = actionData['current_stock'] as int;
-        final productPrice = actionData['product_price'] as double;
-        final totalCost = quantity * productPrice;
-        final newStock = currentStock + quantity;
-        
-        if (!(await AccountHelper.canAfford(totalCost))) {
-          final availableFunds = await AccountHelper.getAvailableFunds();
-          _currentState = morphic.MorphicState(
-            intent: morphic.Intent.unknown,
-            uiMode: morphic.UIMode.narrative,
-            narrative: 'Insufficient funds! You need \$${totalCost.toStringAsFixed(2)} but only have \$${availableFunds.toStringAsFixed(2)} available.',
-            headerText: 'Order Failed',
-            confidence: 1.0,
-          );
-        } else if (productId != null) {
-          final productIdInt = int.tryParse(productId) ?? 0;
-          await BusinessData.updateStock(productIdInt, newStock);
-          await AccountHelper.debit(totalCost, 'Purchased $quantity units of $productName', productName);
-          final newBalance = await AccountHelper.getAvailableFunds();
-          _currentState = morphic.MorphicState(
-            intent: morphic.Intent.inventory,
-            uiMode: morphic.UIMode.narrative,
-            narrative: 'Order placed! $productName now has $newStock units. \$${totalCost.toStringAsFixed(2)} deducted. New balance: \$${newBalance.toStringAsFixed(2)}',
-            headerText: 'Success',
-            confidence: 1.0,
-          );
-        }
-        break;
-      case 'deleteProduct':
-        if (productId != null) {
-          final productIdInt = int.tryParse(productId) ?? 0;
-          await BusinessData.deleteProduct(productIdInt);
-          _currentState = morphic.MorphicState(
-            intent: morphic.Intent.inventory,
-            uiMode: morphic.UIMode.narrative,
-            narrative: '$productName has been removed from inventory.',
-            headerText: 'Product Deleted',
-            confidence: 1.0,
-          );
-        }
-        break;
-      case 'addProduct':
-        final quantity = actionData['quantity'] as int;
-        final productPrice = actionData['product_price'] as double;
-        final totalCost = quantity * productPrice;
-        
-        if (!(await AccountHelper.canAfford(totalCost))) {
-          final availableFunds = await AccountHelper.getAvailableFunds();
-          _currentState = morphic.MorphicState(
-            intent: morphic.Intent.unknown,
-            uiMode: morphic.UIMode.narrative,
-            narrative: 'Insufficient funds! You need \$${totalCost.toStringAsFixed(2)} but only have \$${availableFunds.toStringAsFixed(2)} available.',
-            headerText: 'Order Failed',
-            confidence: 1.0,
-          );
-        } else {
-          final newProduct = client.Product(
-            name: productName,
-            stockCount: quantity,
-            price: productPrice,
-            imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-            category: 'shoes',
-          );
-          await BusinessData.addProduct(newProduct);
-          await AccountHelper.debit(totalCost, 'Purchased $quantity units of $productName', productName);
-          final newBalance = await AccountHelper.getAvailableFunds();
-          _currentState = morphic.MorphicState(
-            intent: morphic.Intent.inventory,
-            uiMode: morphic.UIMode.narrative,
-            narrative: 'New product added! $productName with $quantity units. \$${totalCost.toStringAsFixed(2)} deducted. New balance: \$${newBalance.toStringAsFixed(2)}',
-            headerText: 'Product Added',
-            confidence: 1.0,
-          );
-        }
-        break;
-    }
-    
+    _isProcessing = true;
     notifyListeners();
-    _elevenLabsService.speak(_currentState.narrative);
+    
+    try {
+      _currentState = await _actionService.handleActionConfirm(actionType, actionData);
+    } catch (e) {
+      _currentState = morphic.MorphicState(
+        intent: morphic.Intent.unknown,
+        uiMode: morphic.UIMode.narrative,
+        narrative: 'Error executing action: $e',
+        headerText: 'Error',
+        confidence: 0.0,
+      );
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+      if (_isVoiceEnabled) {
+        _elevenLabsService.speak(_currentState.narrative);
+      }
+    }
   }
 
   void handleActionCancel() {
