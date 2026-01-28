@@ -80,6 +80,15 @@ class ServerpodService {
     return await _client.seed.resetDatabase();
   }
 
+  // Test operations
+  static Future<Map<String, dynamic>> runAllTests() async {
+    return await _client.test.runAllTests();
+  }
+
+  static Future<String> getSystemStatus() async {
+    return await _client.test.getSystemStatus();
+  }
+
   // Expense operations
   static Future<List<Expense>> getExpenses() async {
     return await _client.expense.getAllExpenses();

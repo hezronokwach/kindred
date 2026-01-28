@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../widgets/morphic_container.dart';
 import '../utils/app_theme.dart';
+import 'test_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -116,14 +117,29 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget _buildHeader(AppState appState) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.md, vertical: AppTheme.sm),
-      child: const Text(
-        'KINDRED AI',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.black,
-          letterSpacing: 1.2,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'KINDRED AI',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.black,
+              letterSpacing: 1.2,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TestScreen()),
+              );
+            },
+            icon: const Icon(Icons.science, color: AppTheme.emerald),
+            tooltip: 'Run Tests',
+          ),
+        ],
       ),
     );
   }
