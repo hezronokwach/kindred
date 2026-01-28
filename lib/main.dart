@@ -88,7 +88,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _conversationHistory.add({'role': 'user', 'parts': [{'text': transcription}]});
+      _conversationHistory.add(transcription);
       _currentState = await _geminiService.analyzeQuery(transcription);
       notifyListeners();
       

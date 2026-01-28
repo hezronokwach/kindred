@@ -28,13 +28,28 @@ class FinanceChart extends StatelessWidget {
           maxY: expenseList.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.9),
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${expenseList[groupIndex].key}\n\$${rod.toY.toStringAsFixed(2)}',
+                  '${expenseList[groupIndex].key}\n',
                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  children: [
+                    TextSpan(
+                      text: '\$${rod.toY.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.normal),
+                    ),
+                  ],
                 );
               },
             ),
+            touchCallback: (FlTouchEvent event, barTouchResponse) {
+              if (!event.isInterestedForInteractions ||
+                  barTouchResponse == null ||
+                  barTouchResponse.spot == null) {
+                return;
+              }
+              // Here we could trigger a callback to AppState to update narrative
+            },
           ),
           titlesData: FlTitlesData(
             show: true,
