@@ -3,6 +3,9 @@ table: expenses
 fields:
   category: String
   amount: double
+  type: String, default='expense'
+  paymentMethod: String?, default='Cash'
+  taxAmount: double, default=0.0
   productName: String?
   description: String?
   date: DateTime, default=now
@@ -13,3 +16,5 @@ indexes:
     fields: date
   expense_product_idx:
     fields: productName
+  expense_type_idx:
+    fields: type
