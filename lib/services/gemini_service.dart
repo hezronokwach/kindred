@@ -77,6 +77,15 @@ Specific Rules:
 - "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
 - "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
 
+Extremum Queries (Lowest/Highest):
+- "Cheapest product" -> get_products. Entities: {"sort_by": "price_asc", "limit": 1}.
+- "Most expensive product" -> get_products. Entities: {"sort_by": "price_desc", "limit": 1}.
+- "Lowest stock shoe" -> get_products. Entities: {"sort_by": "stock_asc", "limit": 1}.
+- "Highest stock shoe" -> get_products. Entities: {"sort_by": "stock_desc", "limit": 1}.
+- "Category with highest spending" -> get_expenses. Entities: {"category_extremum": "highest"}.
+- "Category with lowest spent" -> get_expenses. Entities: {"category_extremum": "lowest"}.
+- Narrative MUST mention the specific product/category name and its value.
+
 Filtering & Sorting Entities:
 - Inventory: "stock_filter" ("<10", ">5"), "price_filter" ("<100", ">50"), "product_name" (search), "sort_by" ("stock_asc", "stock_desc", "price_asc", "price_desc").
 - Finance: "time_filter" ("today", "last_week", "last_month"), "product_filter" (search), "category_filter" (search), "sort_by" ("amount_asc", "amount_desc", "date_asc", "date_desc").

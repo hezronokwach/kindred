@@ -106,7 +106,30 @@ class FinanceHandler implements IntentHandler {
         }).toList();
       }
       
-      if (entities.containsKey('sort_by')) {
+      if (entities.containsKey('category_extremum')) {
+        // Special logic: Group by category first
+        final Map<String, double> categoryTotals = {};
+        for (var e in expenses) {
+          categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount;
+        }
+        
+        final sortedCategories = categoryTotals.entries.toList();
+        final extremumType = entities['category_extremum'].toString();
+        
+        if (extremumType == 'lowest') {
+          sortedCategories.sort((a, b) => a.value.compareTo(b.value));
+        } else if (extremumType == 'highest') {
+          sortedCategories.sort((a, b) => b.value.compareTo(a.value));
+        }
+        
+        if (sortedCategories.isNotEmpty) {
+          final topCategory = sortedCategories.first;
+          filteredExpenses = expenses.where((e) => e.category == topCategory.key).toList();
+          // We can also add specifically focused data here if needed
+          data['top_category'] = topCategory.key;
+          data['top_amount'] = topCategory.value;
+        }
+      } else if (entities.containsKey('sort_by')) {
         final sortBy = entities['sort_by'].toString();
         switch (sortBy) {
           case 'amount_desc':
@@ -128,6 +151,11 @@ class FinanceHandler implements IntentHandler {
         final limit = entities['limit'];
         if (limit is int && limit > 0 && filteredExpenses.isNotEmpty) {
           filteredExpenses = filteredExpenses.take(limit).toList();
+        } else if (limit is String) {
+          final limitInt = int.tryParse(limit);
+          if (limitInt != null && limitInt > 0 && filteredExpenses.isNotEmpty) {
+            filteredExpenses = filteredExpenses.take(limitInt).toList();
+          }
         }
       }
       

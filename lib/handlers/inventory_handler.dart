@@ -126,6 +126,11 @@ class InventoryHandler implements IntentHandler {
         final limit = entities['limit'];
         if (limit is int && limit > 0 && filteredProducts.isNotEmpty) {
           filteredProducts = filteredProducts.take(limit).toList();
+        } else if (limit is String) {
+          final limitInt = int.tryParse(limit);
+          if (limitInt != null && limitInt > 0 && filteredProducts.isNotEmpty) {
+            filteredProducts = filteredProducts.take(limitInt).toList();
+          }
         }
       }
 
