@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:kindred_butler_client/kindred_butler_client.dart';
 
 class ServerpodService {
@@ -19,56 +16,41 @@ class ServerpodService {
     }
   }
 
-  // Caching helpers
-  static Future<void> _saveToCache(String key, dynamic data) async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/$key.cache');
-      await file.writeAsString(jsonEncode(data));
-    } catch (e) {
-      print('Cache save failed: $e');
-    }
-  }
-
-  static Future<dynamic> _loadFromCache(String key) async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/$key.cache');
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        return jsonDecode(content);
-      }
-    } catch (e) {
-      print('Cache load failed: $e');
-    }
-    return null;
-  }
-
   // Product operations
   static Future<List<Product>> getProducts() async {
     try {
-      final products = await _client.product.getAllProducts();
-      await _saveToCache('products', products.map((p) => p.toJson()).toList());
-      return products;
+      return await _client.product.getAllProducts();
     } catch (e) {
-      final cached = await _loadFromCache('products') as List?;
-      if (cached != null) {
-        return cached.map((json) => Product.fromJson(json)).toList();
-      }
+      print('Error fetching products: $e');
       return [];
     }
   }
 
   static Future<Product?> getProductById(int id) async {
-    return await _client.product.getProductById(id);
+    try {
+      return await _client.product.getProductById(id);
+    } catch (e) {
+      print('Error fetching product: $e');
+      return null;
+    }
   }
 
   static Future<List<Product>> getProductsByName(String name) async {
-    return await _client.product.getProductsByName(name);
+    try {
+      return await _client.product.getProductsByName(name);
+    } catch (e) {
+      print('Error searching products: $e');
+      return [];
+    }
   }
 
   static Future<Product?> updateProductStock(int id, int newStock) async {
-    return await _client.product.updateStock(id, newStock);
+    try {
+      return await _client.product.updateStock(id, newStock);
+    } catch (e) {
+      print('Error updating stock: $e');
+      return null;
+    }
   }
 
   static Future<Product> addProduct(Product product) async {
@@ -77,9 +59,9 @@ class ServerpodService {
 
   static Future<bool> deleteProduct(int id) async {
     try {
-      await _client.product.deleteProduct(id);
-      return true;
+      return await _client.product.deleteProduct(id);
     } catch (e) {
+      print('Error deleting product: $e');
       return false;
     }
   }
@@ -89,13 +71,12 @@ class ServerpodService {
     try {
       final account = await _client.account.getAccount();
       if (account != null) {
-        await _saveToCache('balance', account.balance);
         return account.balance;
       }
       return 0.0;
     } catch (e) {
-      final cached = await _loadFromCache('balance') as double?;
-      return cached ?? 0.0;
+      print('Error fetching balance: $e');
+      return 0.0;
     }
   }
 
@@ -108,7 +89,12 @@ class ServerpodService {
   }
 
   static Future<Account?> subtractFromBalance(double amount) async {
-    return await _client.account.subtractFromBalance(amount);
+    try {
+      return await _client.account.subtractFromBalance(amount);
+    } catch (e) {
+      print('Error subtracting from balance: $e');
+      return null;
+    }
   }
 
   // Seed operations
@@ -132,20 +118,20 @@ class ServerpodService {
   // Expense operations
   static Future<List<Expense>> getExpenses() async {
     try {
-      final expenses = await _client.expense.getAllExpenses();
-      await _saveToCache('expenses', expenses.map((e) => e.toJson()).toList());
-      return expenses;
+      return await _client.expense.getAllExpenses();
     } catch (e) {
-      final cached = await _loadFromCache('expenses') as List?;
-      if (cached != null) {
-        return cached.map((json) => Expense.fromJson(json)).toList();
-      }
+      print('Error fetching expenses: $e');
       return [];
     }
   }
 
   static Future<List<Expense>> getExpensesByCategory(String category) async {
-    return await _client.expense.getExpensesByCategory(category);
+    try {
+      return await _client.expense.getExpensesByCategory(category);
+    } catch (e) {
+      print('Error fetching expenses by category: $e');
+      return [];
+    }
   }
 
   static Future<Expense> addExpense(Expense expense) async {
@@ -153,6 +139,11 @@ class ServerpodService {
   }
 
   static Future<bool> deleteExpense(int id) async {
-    return await _client.expense.deleteExpense(id);
+    try {
+      return await _client.expense.deleteExpense(id);
+    } catch (e) {
+      print('Error deleting expense: $e');
+      return false;
+    }
   }
 }

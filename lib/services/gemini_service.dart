@@ -63,16 +63,20 @@ class GeminiService {
 
   Future<String> _buildSystemPrompt() async {
     return '''Shoe store assistant. You have access to tools to fetch real-time data.
-Always fetch data before answering questions about inventory, finance, or balance.
+IMPORTANT: Always call tools FIRST to get current data before providing your final JSON response.
+Once you have the tool results, use them to fulfill the user's request specifically.
 
-JSON Output Format:
+JSON Output Format (Strict JSON ONLY):
 {"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|accountBalance","ui_mode":"table|chart|image|narrative|action","header_text":"...","narrative":"...","entities":{},"confidence":0-1}
 
-Rules:
-- Affordability → fetch balance AND product price, then compare.
-- Order/Buy → updateStock+action.
-- "show Nike Air Max" → retail+image+{"product_name":"Nike Air Max"}.
-- Use tools to get current data. Do not hallucinate numbers.''';
+Specific Rules:
+- "Can I afford [X] [Product]" -> get_account_balance + get_products. Then return intent "accountBalance" with entities {"product_name":"...", "quantity":X}.
+- "Order [X] [Product]" -> get_products. Then return intent "updateStock", ui_mode "action", entities {"product_name":"...", "quantity":X}.
+- "Add product [Name]" -> return intent "addProduct", ui_mode "action", entities {"product_name":"...", "price":..., "quantity":...}.
+- "Show Nike" -> return intent "retail", ui_mode "image", entities {"product_name":"Nike"}.
+- "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
+- "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
+- Use tool data. Never say "I will check" in the final JSON narrative; provide the actual answer.''';
   }
 
   Future<morphic.MorphicState> analyzeQuery(String userInput) async {
@@ -88,31 +92,49 @@ Rules:
 
       final systemPrompt = await _buildSystemPrompt();
       
-      return await _processWithGemini(systemPrompt);
+      return await _processWithGemini(systemPrompt, functionCallCount: 0);
     } catch (e) {
       return _errorState('Connection error: $e');
     }
   }
 
-  Future<morphic.MorphicState> _processWithGemini(String systemPrompt) async {
+  Future<morphic.MorphicState> _processWithGemini(
+    String systemPrompt, {
+    int retryCount = 0,
+    int functionCallCount = 0,
+  }) async {
+    if (functionCallCount > 5) {
+      return _errorState('AI loop detected. Please try a different query.');
+    }
+
     final response = await http.post(
       Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'contents': [
-          {'role': 'user', 'parts': [{'text': systemPrompt}]},
-          ..._conversationHistory
-        ],
+        'system_instruction': {
+          'parts': [{'text': systemPrompt}]
+        },
+        'contents': _conversationHistory,
         'tools': _getTools(),
         'generationConfig': {
           'temperature': 0.7,
           'responseMimeType': 'application/json',
         }
       }),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 429) {
+      if (retryCount < 2) {
+        // Rate limit hit, wait and retry
+        await Future.delayed(Duration(seconds: 3 * (retryCount + 1)));
+        return await _processWithGemini(systemPrompt, retryCount: retryCount + 1, functionCallCount: functionCallCount);
+      } else {
+        return _errorState('API quota exhausted. Please wait a minute before trying again.');
+      }
+    }
 
     if (response.statusCode != 200) {
-      return _errorState('API error: ${response.statusCode}');
+      return _errorState('API error: ${response.statusCode}. ${response.body}');
     }
 
     final data = jsonDecode(response.body);
@@ -131,7 +153,7 @@ Rules:
         // Add function call and result to history
         _conversationHistory.add(candidate['content']);
         _conversationHistory.add({
-          'role': 'function',
+          'role': 'user', // REST API expects 'user' for functionResponse
           'parts': [
             {
               'functionResponse': {
@@ -143,13 +165,25 @@ Rules:
         });
 
         // Recurse with tool results
-        return await _processWithGemini(systemPrompt);
+        return await _processWithGemini(systemPrompt, retryCount: retryCount, functionCallCount: functionCallCount + 1);
       }
     }
 
-    // No more function calls, parse the JSON response
+    // No more function calls, save the final response to history
+    _conversationHistory.add(candidate['content']);
+
+    // Parse the JSON response
     final content = parts[0]['text'];
-    final aiResponse = jsonDecode(content);
+    final decoded = jsonDecode(content);
+    
+    Map<String, dynamic> aiResponse;
+    if (decoded is Map<String, dynamic>) {
+      aiResponse = decoded;
+    } else if (decoded is List && decoded.isNotEmpty && decoded[0] is Map<String, dynamic>) {
+      aiResponse = decoded[0] as Map<String, dynamic>;
+    } else {
+      return _errorState('AI returned invalid format. Please try again.');
+    }
     
     // Fetch products and expenses for the handlers (from DB)
     final products = await BusinessData.getProducts();
@@ -189,7 +223,8 @@ Rules:
     final narrative = response['narrative'] ?? 'I\'m not sure how to help with that.';
     final headerText = response['header_text'];
     final confidence = (response['confidence'] ?? 1.0).toDouble();
-    final entities = response['entities'] ?? {};
+    final entitiesRaw = response['entities'];
+    final Map<String, dynamic> entities = entitiesRaw is Map<String, dynamic> ? entitiesRaw : {};
 
     final intent = morphic.Intent.values.firstWhere(
       (e) => e.name == intentStr,
