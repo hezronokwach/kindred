@@ -76,6 +76,13 @@ Specific Rules:
 - "Show Nike" -> return intent "retail", ui_mode "image", entities {"product_name":"Nike"}.
 - "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
 - "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
+
+Filtering & Sorting Entities:
+- Inventory: "stock_filter" ("<10", ">5"), "price_filter" ("<100", ">50"), "product_name" (search), "sort_by" ("stock_asc", "stock_desc", "price_asc", "price_desc").
+- Finance: "time_filter" ("today", "last_week", "last_month"), "product_filter" (search), "category_filter" (search), "sort_by" ("amount_asc", "amount_desc", "date_asc", "date_desc").
+- Example: "Show low stock products" -> entities {"stock_filter": "<10"}.
+- Example: "Sort by price descending" -> entities {"sort_by": "price_desc"}.
+
 - Use tool data. Never say "I will check" in the final JSON narrative; provide the actual answer.''';
   }
 

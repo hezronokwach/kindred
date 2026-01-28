@@ -75,6 +75,10 @@ class InventoryHandler implements IntentHandler {
         } else if (filter.startsWith('>')) {
           final threshold = int.tryParse(filter.substring(1)) ?? 0;
           filteredProducts = filteredProducts.where((p) => p.stockCount > threshold).toList();
+        } else {
+          // Default to less than if no prefix
+          final threshold = int.tryParse(filter) ?? 999;
+          filteredProducts = filteredProducts.where((p) => p.stockCount < threshold).toList();
         }
       }
 
@@ -86,6 +90,10 @@ class InventoryHandler implements IntentHandler {
         } else if (filter.startsWith('>')) {
           final threshold = double.tryParse(filter.substring(1)) ?? 0;
           filteredProducts = filteredProducts.where((p) => p.price > threshold).toList();
+        } else {
+          // Default to less than if no prefix
+          final threshold = double.tryParse(filter) ?? 99999.0;
+          filteredProducts = filteredProducts.where((p) => p.price < threshold).toList();
         }
       }
 
