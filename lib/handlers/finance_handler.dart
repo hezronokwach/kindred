@@ -39,7 +39,7 @@ class FinanceHandler implements IntentHandler {
           orElse: () => products.first,
         );
         
-        final totalCost = quantity.toDouble() * product.price;
+        final totalCost = quantity.toDouble() * product.sellingPrice;
         final balance = await AccountHelper.getAvailableFunds();
         final canAfford = balance >= totalCost;
         
@@ -67,6 +67,57 @@ class FinanceHandler implements IntentHandler {
         );
       }
     } else if (intent == Intent.finance) {
+      if (entities.containsKey('profit_analysis')) {
+        final productName = entities['product_name']?.toString() ?? '';
+        final relevantSales = expenses.where((e) => 
+          e.type == 'sale' && 
+          (productName.isEmpty || (e.productName?.toLowerCase().contains(productName.toLowerCase()) ?? false))
+        ).toList();
+
+        double totalRevenue = 0;
+        double totalCost = 0;
+
+        for (var sale in relevantSales) {
+          totalRevenue += sale.amount;
+          final product = products.firstWhere(
+            (p) => p.name.toLowerCase() == sale.productName?.toLowerCase(),
+            orElse: () => products.firstWhere((p) => p.name.contains(sale.productName ?? ''), orElse: () => products.first),
+          );
+          totalCost += product.costPrice * (sale.amount / product.sellingPrice);
+        }
+
+        final profit = totalRevenue - totalCost;
+        final margin = totalRevenue > 0 ? (profit / totalRevenue * 100) : 0.0;
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.chart,
+          headerText: '💰 Profit Analysis',
+          narrative: 'You have generated **\$${profit.toStringAsFixed(0)}** in profit${productName.isNotEmpty ? ' from $productName' : ''} on revenue of \$${totalRevenue.toStringAsFixed(0)}. Your current margin is **${margin.toStringAsFixed(1)}%**.',
+          data: {'expenses': relevantSales},
+          confidence: 1.0,
+        );
+      }
+
+      if (entities.containsKey('trend_analysis')) {
+        final now = DateTime.now();
+        final thisMonth = expenses.where((e) => e.type == 'expense' && e.date.month == now.month && e.date.year == now.year).fold(0.0, (sum, e) => sum + e.amount);
+        final lastMonth = expenses.where((e) => e.type == 'expense' && e.date.month == now.month - 1 && e.date.year == now.year).fold(0.0, (sum, e) => sum + e.amount);
+        
+        final diff = thisMonth - lastMonth;
+        final percentage = lastMonth > 0 ? (diff / lastMonth * 100).abs() : 0.0;
+        final trend = diff > 0 ? 'increased by' : 'decreased by';
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.chart,
+          headerText: '📊 Spending Trend',
+          narrative: 'Your operational spending this month (\$${thisMonth.toStringAsFixed(0)}) has $trend **${percentage.toStringAsFixed(1)}%** compared to last month (\$${lastMonth.toStringAsFixed(0)}).',
+          data: {'expenses': expenses.where((e) => e.type == 'expense').toList()},
+          confidence: 1.0,
+        );
+      }
+
       var filteredExpenses = expenses;
       
       if (entities.containsKey('time_filter')) {
