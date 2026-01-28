@@ -3,89 +3,183 @@ import 'package:http/http.dart' as http;
 import '../models/morphic_state.dart' as morphic;
 import '../models/business_data.dart';
 import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
+import '../handlers/intent_handler.dart';
+import '../handlers/inventory_handler.dart';
+import '../handlers/finance_handler.dart';
+import '../handlers/retail_handler.dart';
+import '../handlers/default_handler.dart';
 
 class GeminiService {
   final String apiKey;
-  final List<String> _conversationHistory = [];
-  static const int maxHistoryLength = 3;
+  final List<Map<String, dynamic>> _conversationHistory = [];
+  static const int maxHistoryLength = 10;
+
+  final Map<morphic.Intent, IntentHandler> _handlers = {
+    morphic.Intent.inventory: InventoryHandler(),
+    morphic.Intent.updateStock: InventoryHandler(),
+    morphic.Intent.addProduct: InventoryHandler(),
+    morphic.Intent.deleteProduct: InventoryHandler(),
+    morphic.Intent.finance: FinanceHandler(),
+    morphic.Intent.accountBalance: FinanceHandler(),
+    morphic.Intent.retail: RetailHandler(),
+  };
+
+  final IntentHandler _defaultHandler = DefaultHandler();
 
   GeminiService({required this.apiKey});
 
-  Future<String> _buildSystemPrompt(List<client.Product> products, List<client.Expense> expenses) async {
-    final productList = products.map((p) => '${p.name}:\$${p.price},${p.stockCount}').join('|');
-    final balance = (await AccountHelper.getAvailableFunds()).toStringAsFixed(0);
+  List<Map<String, dynamic>> _getTools() {
+    return [
+      {
+        'function_declarations': [
+          {
+            'name': 'get_products',
+            'description': 'Get all products in inventory including stock and price.',
+            'parameters': {
+              'type': 'object',
+              'properties': {},
+            }
+          },
+          {
+            'name': 'get_expenses',
+            'description': 'Get all business expenses.',
+            'parameters': {
+              'type': 'object',
+              'properties': {},
+            }
+          },
+          {
+            'name': 'get_account_balance',
+            'description': 'Get the current available funds in the business account.',
+            'parameters': {
+              'type': 'object',
+              'properties': {},
+            }
+          }
+        ]
+      }
+    ];
+  }
 
-    return '''Shoe store assistant. JSON only.
+  Future<String> _buildSystemPrompt() async {
+    return '''Shoe store assistant. You have access to tools to fetch real-time data.
+Always fetch data before answering questions about inventory, finance, or balance.
 
-Products: $productList | Balance: \$$balance
-
-JSON: {"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|accountBalance","ui_mode":"table|chart|image|narrative|action","header_text":"...","narrative":"...","entities":{},"confidence":0-1}
+JSON Output Format:
+{"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|accountBalance","ui_mode":"table|chart|image|narrative|action","header_text":"...","narrative":"...","entities":{},"confidence":0-1}
 
 Rules:
-- "can I afford" / "afford" → accountBalance+narrative (calculate: quantity × price, compare to balance, answer yes/no with numbers)
-- "order" / "buy" / "purchase" → updateStock+action
-- "show inventory" / "all products" → inventory+table (no filters)
-- "show [specific product name]" / "display [specific product name]" → retail+image+{"product_name":"[product]"} (single product card)
-- "expenses" / "spending" → finance+chart
-- Balance query → accountBalance+narrative
-- "sort by stock ascending" / "sort by stock lowest first" → inventory+table+{"sort_by":"stock_asc"}
-- "sort by stock descending" / "sort by stock highest first" → inventory+table+{"sort_by":"stock_desc"}
-- "sort by price ascending" / "sort by price lowest first" → inventory+table+{"sort_by":"price_asc"}
-- "sort by price descending" / "sort by price highest first" → inventory+table+{"sort_by":"price_desc"}
-- "which has lowest stock" / "product with least stock" → inventory+table+{"sort_by":"stock_asc","limit":1}
-- "which has highest stock" / "product with most stock" → inventory+table+{"sort_by":"stock_desc","limit":1}
-- "stock less than X" / "stock < X" → inventory+table+{"stock_filter":"<X"}
-- "stock more than X" / "stock > X" → inventory+table+{"stock_filter":">X"}
-- "price less than X" / "price < X" / "under \$X" → inventory+table+{"price_filter":"<X"}
-- "price more than X" / "price > X" / "over \$X" → inventory+table+{"price_filter":">X"}
-
-Ex: "show Nike Air Max"→retail,image,{"product_name":"Nike Air Max"} | "which product has the lowest stock"→inventory,table,{"sort_by":"stock_asc","limit":1} | "show stock less than 50"→inventory,table,{"stock_filter":"<50"} | "sort products by price ascending"→inventory,table,{"sort_by":"price_asc"}''';
+- Affordability → fetch balance AND product price, then compare.
+- Order/Buy → updateStock+action.
+- "show Nike Air Max" → retail+image+{"product_name":"Nike Air Max"}.
+- Use tools to get current data. Do not hallucinate numbers.''';
   }
 
   Future<morphic.MorphicState> analyzeQuery(String userInput) async {
     try {
-      final products = await BusinessData.getProducts();
-      final expenses = await BusinessData.getExpenses();
+      _conversationHistory.add({
+        'role': 'user',
+        'parts': [{'text': userInput}]
+      });
 
-      _conversationHistory.add(userInput);
       if (_conversationHistory.length > maxHistoryLength) {
         _conversationHistory.removeAt(0);
       }
 
-      final systemPrompt = await _buildSystemPrompt(products, expenses);
-      final fullPrompt = '$systemPrompt\n\nUser query: $userInput\n\nRespond with JSON only:';
-
-      final response = await http
-          .post(
-            Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'contents': [
-                {
-                  'parts': [
-                    {'text': fullPrompt}
-                  ]
-                }
-              ],
-              'generationConfig': {
-                'temperature': 0.7,
-                'responseMimeType': 'application/json',
-              }
-            }),
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['candidates'][0]['content']['parts'][0]['text'];
-        final aiResponse = jsonDecode(content);
-        final result = await _parseResponse(aiResponse, products, expenses);
-        return result;
-      } else {
-        return _errorState('API error: ${response.statusCode}');
-      }
+      final systemPrompt = await _buildSystemPrompt();
+      
+      return await _processWithGemini(systemPrompt);
     } catch (e) {
-      return _errorState('Connection error. Please try again.');
+      return _errorState('Connection error: $e');
+    }
+  }
+
+  Future<morphic.MorphicState> _processWithGemini(String systemPrompt) async {
+    final response = await http.post(
+      Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'contents': [
+          {'role': 'user', 'parts': [{'text': systemPrompt}]},
+          ..._conversationHistory
+        ],
+        'tools': _getTools(),
+        'generationConfig': {
+          'temperature': 0.7,
+          'responseMimeType': 'application/json',
+        }
+      }),
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      return _errorState('API error: ${response.statusCode}');
+    }
+
+    final data = jsonDecode(response.body);
+    final candidate = data['candidates'][0];
+    final parts = candidate['content']['parts'] as List;
+
+    // Check for function calls
+    for (var part in parts) {
+      if (part.containsKey('functionCall')) {
+        final functionCall = part['functionCall'];
+        final functionName = functionCall['name'];
+        final args = functionCall['args'] ?? {};
+
+        final toolResult = await _executeTool(functionName, args);
+        
+        // Add function call and result to history
+        _conversationHistory.add(candidate['content']);
+        _conversationHistory.add({
+          'role': 'function',
+          'parts': [
+            {
+              'functionResponse': {
+                'name': functionName,
+                'response': {'content': toolResult}
+              }
+            }
+          ]
+        });
+
+        // Recurse with tool results
+        return await _processWithGemini(systemPrompt);
+      }
+    }
+
+    // No more function calls, parse the JSON response
+    final content = parts[0]['text'];
+    final aiResponse = jsonDecode(content);
+    
+    // Fetch products and expenses for the handlers (from DB)
+    final products = await BusinessData.getProducts();
+    final expenses = await BusinessData.getExpenses();
+    
+    return await _parseResponse(aiResponse, products, expenses);
+  }
+
+  Future<dynamic> _executeTool(String name, Map<String, dynamic> args) async {
+    switch (name) {
+      case 'get_products':
+        final products = await BusinessData.getProducts();
+        return products.map((p) => {
+          'name': p.name,
+          'price': p.price,
+          'stock': p.stockCount,
+          'category': p.category,
+        }).toList();
+      case 'get_expenses':
+        final expenses = await BusinessData.getExpenses();
+        return expenses.map((e) => {
+          'category': e.category,
+          'amount': e.amount,
+          'date': e.date.toIso8601String(),
+          'productName': e.productName,
+        }).toList();
+      case 'get_account_balance':
+        return await AccountHelper.getAvailableFunds();
+      default:
+        return 'Unknown tool';
     }
   }
 
@@ -107,174 +201,18 @@ Ex: "show Nike Air Max"→retail,image,{"product_name":"Nike Air Max"} | "which 
       orElse: () => morphic.UIMode.narrative,
     );
 
-    Map<String, dynamic> data = {};
-    String? actionType;
-    
-    if (intent == morphic.Intent.updateStock || intent == morphic.Intent.deleteProduct || intent == morphic.Intent.addProduct) {
-      // CRUD operations
-      actionType = intent.name;
-      final productName = entities['product_name'];
-      
-      if (intent == morphic.Intent.addProduct) {
-        // New product - use provided data
-        data['action_type'] = actionType;
-        data['action_data'] = {
-          'product_name': productName,
-          'product_id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'current_stock': 0,
-          'quantity': int.tryParse(entities['quantity']?.toString() ?? '0') ?? 0,
-          'price': double.tryParse(entities['price']?.toString() ?? '100.0') ?? 100.0,
-          'stock': int.tryParse(entities['quantity']?.toString() ?? '0') ?? 0,
-          'product_price': double.tryParse(entities['price']?.toString() ?? '100.0') ?? 100.0,
-        };
-      } else {
-        // Existing product
-        final product = products.firstWhere(
-          (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
-          orElse: () => products.first,
-        );
-        
-        final quantityValue = entities['quantity'];
-        
-        // Handle both int and double from Gemini
-        int quantity = 0;
-        if (quantityValue is int) {
-          quantity = quantityValue;
-        } else if (quantityValue is double) {
-          quantity = quantityValue.toInt();
-        } else if (quantityValue is String) {
-          quantity = int.tryParse(quantityValue) ?? 0;
-        }
-        
-        data['action_type'] = actionType;
-        data['action_data'] = {
-          'product_name': product.name,
-          'product_id': product.id?.toString() ?? '0',
-          'current_stock': product.stockCount,
-          'quantity': quantity,
-          'price': product.price,
-          'stock': 0,
-          'product_price': product.price,
-        };
-      }
-    } else if (intent == morphic.Intent.accountBalance) {
-      // Handle affordability checks
-      if (entities.containsKey('product_name') && entities.containsKey('quantity')) {
-        final productName = entities['product_name'];
-        final quantityValue = entities['quantity'];
-        
-        // Handle both int and double from Gemini
-        int quantity = 1;
-        if (quantityValue is int) {
-          quantity = quantityValue;
-        } else if (quantityValue is double) {
-          quantity = quantityValue.toInt();
-        } else if (quantityValue is String) {
-          quantity = int.tryParse(quantityValue) ?? 1;
-        }
-        
-        final product = products.firstWhere(
-          (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
-          orElse: () => products.first,
-        );
-        final totalCost = quantity.toDouble() * product.price;
-        final balance = await AccountHelper.getAvailableFunds();
-        final canAfford = await AccountHelper.canAfford(totalCost);
-        
-        final affordabilityText = canAfford 
-          ? '$quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)}. Yes, you can afford it!'
-          : '$quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)}. No, insufficient funds.';
-        
-        return morphic.MorphicState(
-          intent: intent,
-          uiMode: morphic.UIMode.narrative,
-          narrative: affordabilityText,
-          headerText: 'Affordability Check',
-          data: {},
-          confidence: confidence,
-        );
-      }
-    } else if (intent == morphic.Intent.inventory) {
-      var filteredProducts = products;
-      
-      // Apply stock filter if present
-      if (entities.containsKey('stock_filter')) {
-        final filter = entities['stock_filter'];
-        if (filter.startsWith('<')) {
-          final threshold = int.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.stockCount < threshold).toList();
-        } else if (filter.startsWith('>')) {
-          final threshold = int.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.stockCount > threshold).toList();
-        }
-      }
-      
-      // Apply price filter if present
-      if (entities.containsKey('price_filter')) {
-        final filter = entities['price_filter'];
-        if (filter.startsWith('<')) {
-          final threshold = double.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.price < threshold).toList();
-        } else if (filter.startsWith('>')) {
-          final threshold = double.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.price > threshold).toList();
-        }
-      }
-      
-      // Apply product name filter if present
-      if (entities.containsKey('product_name')) {
-        final productName = entities['product_name'];
-        filteredProducts = filteredProducts.where(
-          (p) => p.name.toLowerCase().contains(productName.toLowerCase())
-        ).toList();
-      }
-      
-      // Apply sorting if present (only when explicitly requested)
-      if (entities.containsKey('sort_by')) {
-        final sortBy = entities['sort_by'];
-        switch (sortBy) {
-          case 'stock_asc':
-            filteredProducts.sort((a, b) => a.stockCount.compareTo(b.stockCount));
-            break;
-          case 'stock_desc':
-            filteredProducts.sort((a, b) => b.stockCount.compareTo(a.stockCount));
-            break;
-          case 'price_asc':
-            filteredProducts.sort((a, b) => a.price.compareTo(b.price));
-            break;
-          case 'price_desc':
-            filteredProducts.sort((a, b) => b.price.compareTo(a.price));
-            break;
-        }
-      }
-      
-      // Apply limit if present (for "which has lowest/highest" queries)
-      if (entities.containsKey('limit')) {
-        final limit = entities['limit'];
-        if (limit is int && limit > 0 && filteredProducts.isNotEmpty) {
-          filteredProducts = filteredProducts.take(limit).toList();
-        }
-      }
-      
-      data['products'] = filteredProducts;
-    } else if (intent == morphic.Intent.finance) {
-      data['expenses'] = expenses;
-    } else if (intent == morphic.Intent.retail && entities.containsKey('product_name')) {
-      final productName = entities['product_name'];
-      final product = products.firstWhere(
-        (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
-        orElse: () => products.first,
-      );
-      data['product'] = product;
-    }
+    final handler = _handlers[intent] ?? _defaultHandler;
 
-    return morphic.MorphicState(
+    return await handler.handle(
+      response: response,
+      products: products,
+      expenses: expenses,
       intent: intent,
       uiMode: uiMode,
       narrative: narrative,
       headerText: headerText,
-      data: data,
       confidence: confidence,
+      entities: entities,
     );
   }
 
