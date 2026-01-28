@@ -31,5 +31,8 @@ product:
 seed:
   - seedDatabase:
   - resetDatabase:
+test:
+  - runAllTests:
+  - getSystemStatus:
 greeting:
   - hello:

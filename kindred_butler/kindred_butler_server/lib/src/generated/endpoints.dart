@@ -17,13 +17,14 @@ import '../endpoints/account_endpoint.dart' as _i4;
 import '../endpoints/expense_endpoint.dart' as _i5;
 import '../endpoints/product_endpoint.dart' as _i6;
 import '../endpoints/seed_endpoint.dart' as _i7;
-import '../greetings/greeting_endpoint.dart' as _i8;
-import 'package:kindred_butler_server/src/generated/expense.dart' as _i9;
-import 'package:kindred_butler_server/src/generated/product.dart' as _i10;
+import '../endpoints/test_endpoint.dart' as _i8;
+import '../greetings/greeting_endpoint.dart' as _i9;
+import 'package:kindred_butler_server/src/generated/expense.dart' as _i10;
+import 'package:kindred_butler_server/src/generated/product.dart' as _i11;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
-    as _i11;
-import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _i12;
+import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+    as _i13;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -65,7 +66,13 @@ class Endpoints extends _i1.EndpointDispatch {
           'seed',
           null,
         ),
-      'greeting': _i8.GreetingEndpoint()
+      'test': _i8.TestEndpoint()
+        ..initialize(
+          server,
+          'test',
+          null,
+        ),
+      'greeting': _i9.GreetingEndpoint()
         ..initialize(
           server,
           'greeting',
@@ -402,7 +409,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'expense': _i1.ParameterDescription(
               name: 'expense',
-              type: _i1.getType<_i9.Expense>(),
+              type: _i1.getType<_i10.Expense>(),
               nullable: false,
             ),
           },
@@ -421,7 +428,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'expense': _i1.ParameterDescription(
               name: 'expense',
-              type: _i1.getType<_i9.Expense>(),
+              type: _i1.getType<_i10.Expense>(),
               nullable: false,
             ),
           },
@@ -513,7 +520,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'product': _i1.ParameterDescription(
               name: 'product',
-              type: _i1.getType<_i10.Product>(),
+              type: _i1.getType<_i11.Product>(),
               nullable: false,
             ),
           },
@@ -532,7 +539,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'product': _i1.ParameterDescription(
               name: 'product',
-              type: _i1.getType<_i10.Product>(),
+              type: _i1.getType<_i11.Product>(),
               nullable: false,
             ),
           },
@@ -619,6 +626,32 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
+    connectors['test'] = _i1.EndpointConnector(
+      name: 'test',
+      endpoint: endpoints['test']!,
+      methodConnectors: {
+        'runAllTests': _i1.MethodConnector(
+          name: 'runAllTests',
+          params: {},
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['test'] as _i8.TestEndpoint).runAllTests(session),
+        ),
+        'getSystemStatus': _i1.MethodConnector(
+          name: 'getSystemStatus',
+          params: {},
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['test'] as _i8.TestEndpoint)
+                  .getSystemStatus(session),
+        ),
+      },
+    );
     connectors['greeting'] = _i1.EndpointConnector(
       name: 'greeting',
       endpoint: endpoints['greeting']!,
@@ -636,16 +669,16 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greeting'] as _i8.GreetingEndpoint).hello(
+              ) async => (endpoints['greeting'] as _i9.GreetingEndpoint).hello(
                 session,
                 params['name'],
               ),
         ),
       },
     );
-    modules['serverpod_auth_idp'] = _i11.Endpoints()
+    modules['serverpod_auth_idp'] = _i12.Endpoints()
       ..initializeEndpoints(server);
-    modules['serverpod_auth_core'] = _i12.Endpoints()
+    modules['serverpod_auth_core'] = _i13.Endpoints()
       ..initializeEndpoints(server);
   }
 }
