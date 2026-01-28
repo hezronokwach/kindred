@@ -23,7 +23,7 @@ class InventoryTable extends StatelessWidget {
               cells: [
                 DataCell(Text(product.name)),
                 DataCell(Text('${product.stockCount}')),
-                DataCell(Text('\$${product.price.toStringAsFixed(2)}')),
+                DataCell(Text('\$${product.sellingPrice.toStringAsFixed(2)}')),
                 DataCell(Text(product.category ?? 'Unknown')),
               ],
             );

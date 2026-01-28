@@ -64,7 +64,7 @@ class ProductImageCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Price: \$${product.price.toStringAsFixed(2)}',
+                    'Price: \$${product.sellingPrice.toStringAsFixed(2)}',
                     style: const TextStyle(fontSize: 18, color: Colors.green),
                   ),
                   const SizedBox(height: 4),
