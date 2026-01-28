@@ -19,6 +19,8 @@ class InventoryHandler implements IntentHandler {
     Map<String, dynamic> data = {};
     String? actionType;
 
+    print('InventoryHandler: Intent: $intent, Entities: $entities, Product count: ${products.length}');
+
     if (intent == Intent.updateStock || intent == Intent.deleteProduct || intent == Intent.addProduct) {
       actionType = intent.name;
       final productName = entities['product_name'];
@@ -98,10 +100,13 @@ class InventoryHandler implements IntentHandler {
       }
 
       if (entities.containsKey('product_name')) {
-        final productName = entities['product_name'].toString();
-        filteredProducts = filteredProducts.where(
-          (p) => p.name.toLowerCase().contains(productName.toLowerCase())
-        ).toList();
+        final productName = entities['product_name'].toString().toLowerCase();
+        final genericWords = ['product', 'shoe', 'item', 'inventory', 'sneaker'];
+        if (!genericWords.contains(productName)) {
+          filteredProducts = filteredProducts.where(
+            (p) => p.name.toLowerCase().contains(productName)
+          ).toList();
+        }
       }
 
       if (entities.containsKey('sort_by')) {

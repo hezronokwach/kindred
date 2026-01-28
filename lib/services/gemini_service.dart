@@ -83,8 +83,9 @@ Extremum Queries (Lowest/Highest):
 - "Lowest stock shoe" -> get_products. Entities: {"sort_by": "stock_asc", "limit": 1}.
 - "Highest stock shoe" -> get_products. Entities: {"sort_by": "stock_desc", "limit": 1}.
 - "Category with highest spending" -> get_expenses. Entities: {"category_extremum": "highest"}.
-- "Category with lowest spent" -> get_expenses. Entities: {"category_extremum": "lowest"}.
 - Narrative MUST mention the specific product/category name and its value.
+- IMPORTANT: Do NOT extract generic words like "product", "item", "shoe", or "expense" into "product_name" or "category_filter". Use these entities ONLY for specific names (e.g., "Nike", "Adidas", "Food").
+- For "lowest/highest" queries, use "sort_by" and "limit": 1 as shown above.
 
 Filtering & Sorting Entities:
 - Inventory: "stock_filter" ("<10", ">5"), "price_filter" ("<100", ">50"), "product_name" (search), "sort_by" ("stock_asc", "stock_desc", "price_asc", "price_desc").

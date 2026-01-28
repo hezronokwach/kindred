@@ -17,6 +17,8 @@ class FinanceHandler implements IntentHandler {
     required Map<String, dynamic> entities,
   }) async {
     Map<String, dynamic> data = {};
+    
+    print('FinanceHandler: Intent: $intent, Entities: $entities, Expense count: ${expenses.length}');
 
     if (intent == Intent.accountBalance) {
       final productName = entities['product_name']?.toString();
@@ -92,18 +94,24 @@ class FinanceHandler implements IntentHandler {
       }
       
       if (entities.containsKey('product_filter')) {
-        final productFilter = entities['product_filter'].toString();
-        filteredExpenses = filteredExpenses.where((e) {
-          final productName = e.productName ?? '';
-          return productName.toLowerCase().contains(productFilter.toLowerCase());
-        }).toList();
+        final productFilter = entities['product_filter'].toString().toLowerCase();
+        final genericWords = ['product', 'shoe', 'item', 'expense', 'transaction'];
+        if (!genericWords.contains(productFilter)) {
+          filteredExpenses = filteredExpenses.where((e) {
+            final productName = e.productName ?? '';
+            return productName.toLowerCase().contains(productFilter);
+          }).toList();
+        }
       }
       
       if (entities.containsKey('category_filter')) {
-        final categoryFilter = entities['category_filter'].toString();
-        filteredExpenses = filteredExpenses.where((e) {
-          return e.category.toLowerCase().contains(categoryFilter.toLowerCase());
-        }).toList();
+        final categoryFilter = entities['category_filter'].toString().toLowerCase();
+        final genericWords = ['category', 'expense', 'summary', 'finance'];
+        if (!genericWords.contains(categoryFilter)) {
+          filteredExpenses = filteredExpenses.where((e) {
+            return e.category.toLowerCase().contains(categoryFilter);
+          }).toList();
+        }
       }
       
       if (entities.containsKey('category_extremum')) {
