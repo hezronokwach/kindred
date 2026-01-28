@@ -76,6 +76,10 @@ Specific Rules:
 - "Show Nike" -> return intent "retail", ui_mode "image", entities {"product_name":"Nike"}.
 - "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
 - "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
+- "When will Nike run out" -> get_products + get_expenses. Entities: {"product_name": "Nike", "predict_stock": true}.
+- "What should I reorder" -> get_products + get_expenses. Entities: {"smart_reorder": true}.
+- "Am I spending more this month" -> get_expenses. Entities: {"trend_analysis": true}.
+- "How much profit on Nike" -> get_products + get_expenses. Entities: {"product_name": "Nike", "profit_analysis": true}.
 
 Extremum Queries (Lowest/Highest):
 - "Cheapest product" -> get_products. Entities: {"sort_by": "price_asc", "limit": 1}.
@@ -215,7 +219,9 @@ Filtering & Sorting Entities:
         final products = await BusinessData.getProducts();
         return products.map((p) => {
           'name': p.name,
-          'price': p.price,
+          'sellingPrice': p.sellingPrice,
+          'costPrice': p.costPrice,
+          'brand': p.brand,
           'stock': p.stockCount,
           'category': p.category,
         }).toList();
