@@ -25,7 +25,7 @@ class FinanceChart extends StatelessWidget {
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: expenseList.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2,
+          maxY: expenseList.isEmpty ? 100 : expenseList.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.9),
