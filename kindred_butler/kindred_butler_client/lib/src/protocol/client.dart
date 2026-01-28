@@ -408,6 +408,27 @@ class EndpointSeed extends _i2.EndpointRef {
   );
 }
 
+/// {@category Endpoint}
+class EndpointTest extends _i2.EndpointRef {
+  EndpointTest(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'test';
+
+  _i3.Future<Map<String, dynamic>> runAllTests() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'test',
+        'runAllTests',
+        {},
+      );
+
+  _i3.Future<String> getSystemStatus() => caller.callServerEndpoint<String>(
+    'test',
+    'getSystemStatus',
+    {},
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -472,6 +493,7 @@ class Client extends _i2.ServerpodClientShared {
     expense = EndpointExpense(this);
     product = EndpointProduct(this);
     seed = EndpointSeed(this);
+    test = EndpointTest(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -488,6 +510,8 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointSeed seed;
 
+  late final EndpointTest test;
+
   late final EndpointGreeting greeting;
 
   late final Modules modules;
@@ -500,6 +524,7 @@ class Client extends _i2.ServerpodClientShared {
     'expense': expense,
     'product': product,
     'seed': seed,
+    'test': test,
     'greeting': greeting,
   };
 

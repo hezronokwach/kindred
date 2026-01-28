@@ -12,6 +12,10 @@ apiServer:
   publicHost: localhost
   publicPort: 8080
   publicScheme: http
+  cors:
+    enabled: true
+    allowedOrigins:
+      - '*'
 
 # Configuration for the Insights server.
 insightsServer:
@@ -26,6 +30,10 @@ webServer:
   publicHost: localhost
   publicPort: 8082
   publicScheme: http
+  cors:
+    enabled: true
+    allowedOrigins:
+      - '*'
 
 # This is the database setup for your server.
 database:
