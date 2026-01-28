@@ -17,7 +17,7 @@ class RetailHandler implements IntentHandler {
   }) async {
     Map<String, dynamic> data = {};
 
-    if (intent == Intent.retail && entities.containsKey('product_name')) {
+    if (intent == Intent.retail && entities.containsKey('product_name') && products.isNotEmpty) {
       final productName = entities['product_name'].toString();
       final product = products.firstWhere(
         (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
@@ -32,7 +32,7 @@ class RetailHandler implements IntentHandler {
       narrative: narrative,
       headerText: headerText,
       data: data,
-      confidence: confidence,
+      confidence: 1.0,
     );
   }
 }

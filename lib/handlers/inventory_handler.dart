@@ -29,14 +29,15 @@ class InventoryHandler implements IntentHandler {
           'product_name': productName,
           'product_id': DateTime.now().millisecondsSinceEpoch.toString(),
           'current_stock': 0,
-          'quantity': int.tryParse(entities['quantity']?.toString() ?? '0') ?? 0,
+          'quantity': int.tryParse(entities['quantity']?.toString() ?? '1') ?? 1,
           'price': double.tryParse(entities['price']?.toString() ?? '100.0') ?? 100.0,
-          'stock': int.tryParse(entities['quantity']?.toString() ?? '0') ?? 0,
+          'stock': int.tryParse(entities['quantity']?.toString() ?? '1') ?? 1,
           'product_price': double.tryParse(entities['price']?.toString() ?? '100.0') ?? 100.0,
         };
-      } else {
+      } else if (products.isNotEmpty) {
+        final productName = entities['product_name']?.toString() ?? '';
         final product = products.firstWhere(
-          (p) => p.name.toLowerCase().contains(productName.toString().toLowerCase()),
+          (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
           orElse: () => products.first,
         );
 
@@ -47,7 +48,9 @@ class InventoryHandler implements IntentHandler {
         } else if (quantityValue is double) {
           quantity = quantityValue.toInt();
         } else if (quantityValue is String) {
-          quantity = int.tryParse(quantityValue) ?? 0;
+          quantity = int.tryParse(quantityValue) ?? 1;
+        } else {
+          quantity = 1;
         }
 
         data['action_type'] = actionType;
@@ -127,7 +130,7 @@ class InventoryHandler implements IntentHandler {
       narrative: narrative,
       headerText: headerText,
       data: data,
-      confidence: confidence,
+      confidence: 1.0,
     );
   }
 }

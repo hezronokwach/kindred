@@ -19,30 +19,31 @@ class FinanceHandler implements IntentHandler {
     Map<String, dynamic> data = {};
 
     if (intent == Intent.accountBalance) {
-      if (entities.containsKey('product_name') && entities.containsKey('quantity')) {
-        final productName = entities['product_name'].toString();
-        final quantityValue = entities['quantity'];
-        
-        int quantity = 1;
-        if (quantityValue is int) {
-          quantity = quantityValue;
-        } else if (quantityValue is double) {
-          quantity = quantityValue.toInt();
-        } else if (quantityValue is String) {
-          quantity = int.tryParse(quantityValue) ?? 1;
-        }
-        
+      final productName = entities['product_name']?.toString();
+      final quantityValue = entities['quantity'];
+      
+      int quantity = 1;
+      if (quantityValue is int) {
+        quantity = quantityValue;
+      } else if (quantityValue is double) {
+        quantity = quantityValue.toInt();
+      } else if (quantityValue is String) {
+        quantity = int.tryParse(quantityValue) ?? 1;
+      }
+
+      if (productName != null && products.isNotEmpty) {
         final product = products.firstWhere(
           (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
           orElse: () => products.first,
         );
+        
         final totalCost = quantity.toDouble() * product.price;
         final balance = await AccountHelper.getAvailableFunds();
-        final canAfford = await AccountHelper.canAfford(totalCost);
+        final canAfford = balance >= totalCost;
         
         final affordabilityText = canAfford 
-          ? '$quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)}. Yes, you can afford it!'
-          : '$quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)}. No, insufficient funds.';
+          ? 'Yes! $quantity ${product.name} will cost \$${totalCost.toStringAsFixed(0)}. You have \$${balance.toStringAsFixed(0)} available.'
+          : 'No, unfortunately. $quantity ${product.name} costs \$${totalCost.toStringAsFixed(0)}, but your balance is \$${balance.toStringAsFixed(0)}.';
         
         return MorphicState(
           intent: intent,
@@ -50,7 +51,17 @@ class FinanceHandler implements IntentHandler {
           narrative: affordabilityText,
           headerText: 'Affordability Check',
           data: {},
-          confidence: confidence,
+          confidence: 1.0,
+        );
+      } else {
+        final balance = await AccountHelper.getAvailableFunds();
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.narrative,
+          narrative: 'Your current account balance is \$${balance.toStringAsFixed(2)}.',
+          headerText: 'Account Balance',
+          data: {},
+          confidence: 1.0,
         );
       }
     } else if (intent == Intent.finance) {
