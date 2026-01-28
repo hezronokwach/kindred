@@ -18,15 +18,24 @@ abstract class Expense
     this.id,
     required this.category,
     required this.amount,
+    String? type,
+    String? paymentMethod,
+    double? taxAmount,
     this.productName,
     this.description,
     DateTime? date,
-  }) : date = date ?? DateTime.now();
+  }) : type = type ?? 'expense',
+       paymentMethod = paymentMethod ?? 'Cash',
+       taxAmount = taxAmount ?? 0.0,
+       date = date ?? DateTime.now();
 
   factory Expense({
     int? id,
     required String category,
     required double amount,
+    String? type,
+    String? paymentMethod,
+    double? taxAmount,
     String? productName,
     String? description,
     DateTime? date,
@@ -37,6 +46,9 @@ abstract class Expense
       id: jsonSerialization['id'] as int?,
       category: jsonSerialization['category'] as String,
       amount: (jsonSerialization['amount'] as num).toDouble(),
+      type: jsonSerialization['type'] as String?,
+      paymentMethod: jsonSerialization['paymentMethod'] as String?,
+      taxAmount: (jsonSerialization['taxAmount'] as num?)?.toDouble(),
       productName: jsonSerialization['productName'] as String?,
       description: jsonSerialization['description'] as String?,
       date: jsonSerialization['date'] == null
@@ -56,6 +68,12 @@ abstract class Expense
 
   double amount;
 
+  String type;
+
+  String? paymentMethod;
+
+  double taxAmount;
+
   String? productName;
 
   String? description;
@@ -72,6 +90,9 @@ abstract class Expense
     int? id,
     String? category,
     double? amount,
+    String? type,
+    String? paymentMethod,
+    double? taxAmount,
     String? productName,
     String? description,
     DateTime? date,
@@ -83,6 +104,9 @@ abstract class Expense
       if (id != null) 'id': id,
       'category': category,
       'amount': amount,
+      'type': type,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      'taxAmount': taxAmount,
       if (productName != null) 'productName': productName,
       if (description != null) 'description': description,
       'date': date.toJson(),
@@ -96,6 +120,9 @@ abstract class Expense
       if (id != null) 'id': id,
       'category': category,
       'amount': amount,
+      'type': type,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      'taxAmount': taxAmount,
       if (productName != null) 'productName': productName,
       if (description != null) 'description': description,
       'date': date.toJson(),
@@ -139,6 +166,9 @@ class _ExpenseImpl extends Expense {
     int? id,
     required String category,
     required double amount,
+    String? type,
+    String? paymentMethod,
+    double? taxAmount,
     String? productName,
     String? description,
     DateTime? date,
@@ -146,6 +176,9 @@ class _ExpenseImpl extends Expense {
          id: id,
          category: category,
          amount: amount,
+         type: type,
+         paymentMethod: paymentMethod,
+         taxAmount: taxAmount,
          productName: productName,
          description: description,
          date: date,
@@ -159,6 +192,9 @@ class _ExpenseImpl extends Expense {
     Object? id = _Undefined,
     String? category,
     double? amount,
+    String? type,
+    Object? paymentMethod = _Undefined,
+    double? taxAmount,
     Object? productName = _Undefined,
     Object? description = _Undefined,
     DateTime? date,
@@ -167,6 +203,11 @@ class _ExpenseImpl extends Expense {
       id: id is int? ? id : this.id,
       category: category ?? this.category,
       amount: amount ?? this.amount,
+      type: type ?? this.type,
+      paymentMethod: paymentMethod is String?
+          ? paymentMethod
+          : this.paymentMethod,
+      taxAmount: taxAmount ?? this.taxAmount,
       productName: productName is String? ? productName : this.productName,
       description: description is String? ? description : this.description,
       date: date ?? this.date,
@@ -184,6 +225,22 @@ class ExpenseUpdateTable extends _i1.UpdateTable<ExpenseTable> {
 
   _i1.ColumnValue<double, double> amount(double value) => _i1.ColumnValue(
     table.amount,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> type(String value) => _i1.ColumnValue(
+    table.type,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> paymentMethod(String? value) =>
+      _i1.ColumnValue(
+        table.paymentMethod,
+        value,
+      );
+
+  _i1.ColumnValue<double, double> taxAmount(double value) => _i1.ColumnValue(
+    table.taxAmount,
     value,
   );
 
@@ -214,6 +271,21 @@ class ExpenseTable extends _i1.Table<int?> {
       'amount',
       this,
     );
+    type = _i1.ColumnString(
+      'type',
+      this,
+      hasDefault: true,
+    );
+    paymentMethod = _i1.ColumnString(
+      'paymentMethod',
+      this,
+      hasDefault: true,
+    );
+    taxAmount = _i1.ColumnDouble(
+      'taxAmount',
+      this,
+      hasDefault: true,
+    );
     productName = _i1.ColumnString(
       'productName',
       this,
@@ -235,6 +307,12 @@ class ExpenseTable extends _i1.Table<int?> {
 
   late final _i1.ColumnDouble amount;
 
+  late final _i1.ColumnString type;
+
+  late final _i1.ColumnString paymentMethod;
+
+  late final _i1.ColumnDouble taxAmount;
+
   late final _i1.ColumnString productName;
 
   late final _i1.ColumnString description;
@@ -246,6 +324,9 @@ class ExpenseTable extends _i1.Table<int?> {
     id,
     category,
     amount,
+    type,
+    paymentMethod,
+    taxAmount,
     productName,
     description,
     date,

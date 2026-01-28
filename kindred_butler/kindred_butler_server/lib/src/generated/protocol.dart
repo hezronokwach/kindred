@@ -20,12 +20,14 @@ import 'account.dart' as _i5;
 import 'expense.dart' as _i6;
 import 'greetings/greeting.dart' as _i7;
 import 'product.dart' as _i8;
-import 'package:kindred_butler_server/src/generated/expense.dart' as _i9;
-import 'package:kindred_butler_server/src/generated/product.dart' as _i10;
+import 'supplier.dart' as _i9;
+import 'package:kindred_butler_server/src/generated/expense.dart' as _i10;
+import 'package:kindred_butler_server/src/generated/product.dart' as _i11;
 export 'account.dart';
 export 'expense.dart';
 export 'greetings/greeting.dart';
 export 'product.dart';
+export 'supplier.dart';
 
 class Protocol extends _i1.SerializationManagerServer {
   Protocol._();
@@ -107,6 +109,27 @@ class Protocol extends _i1.SerializationManagerServer {
           dartType: 'double',
         ),
         _i2.ColumnDefinition(
+          name: 'type',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+          columnDefault: '\'expense\'::text',
+        ),
+        _i2.ColumnDefinition(
+          name: 'paymentMethod',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+          columnDefault: '\'Cash\'::text',
+        ),
+        _i2.ColumnDefinition(
+          name: 'taxAmount',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+          columnDefault: '0.0',
+        ),
+        _i2.ColumnDefinition(
           name: 'productName',
           columnType: _i2.ColumnType.text,
           isNullable: true,
@@ -180,6 +203,19 @@ class Protocol extends _i1.SerializationManagerServer {
           isUnique: false,
           isPrimary: false,
         ),
+        _i2.IndexDefinition(
+          indexName: 'expense_type_idx',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'type',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
       ],
       managed: true,
     ),
@@ -209,10 +245,42 @@ class Protocol extends _i1.SerializationManagerServer {
           dartType: 'int',
         ),
         _i2.ColumnDefinition(
-          name: 'price',
+          name: 'sellingPrice',
           columnType: _i2.ColumnType.doublePrecision,
           isNullable: false,
           dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'costPrice',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'brand',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'sku',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'unit',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+          columnDefault: '\'pair\'::text',
+        ),
+        _i2.ColumnDefinition(
+          name: 'minStockThreshold',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '5',
         ),
         _i2.ColumnDefinition(
           name: 'imageUrl',
@@ -227,6 +295,12 @@ class Protocol extends _i1.SerializationManagerServer {
           dartType: 'String?',
         ),
         _i2.ColumnDefinition(
+          name: 'supplierId',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _i2.ColumnDefinition(
           name: 'createdAt',
           columnType: _i2.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
@@ -234,7 +308,18 @@ class Protocol extends _i1.SerializationManagerServer {
           columnDefault: 'CURRENT_TIMESTAMP',
         ),
       ],
-      foreignKeys: [],
+      foreignKeys: [
+        _i2.ForeignKeyDefinition(
+          constraintName: 'products_fk_0',
+          columns: ['supplierId'],
+          referenceTable: 'suppliers',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _i2.ForeignKeyAction.noAction,
+          onDelete: _i2.ForeignKeyAction.noAction,
+          matchType: null,
+        ),
+      ],
       indexes: [
         _i2.IndexDefinition(
           indexName: 'products_pkey',
@@ -288,6 +373,95 @@ class Protocol extends _i1.SerializationManagerServer {
           isUnique: false,
           isPrimary: false,
         ),
+        _i2.IndexDefinition(
+          indexName: 'product_brand_idx',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'brand',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'suppliers',
+      dartName: 'Supplier',
+      schema: 'public',
+      module: 'kindred_butler',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'suppliers_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'name',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'contactPerson',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'email',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'phone',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'leadTimeDays',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '3',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'suppliers_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+        _i2.IndexDefinition(
+          indexName: 'supplier_name_idx',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'name',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
       ],
       managed: true,
     ),
@@ -335,6 +509,9 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i8.Product) {
       return _i8.Product.fromJson(data) as T;
     }
+    if (t == _i9.Supplier) {
+      return _i9.Supplier.fromJson(data) as T;
+    }
     if (t == _i1.getType<_i5.Account?>()) {
       return (data != null ? _i5.Account.fromJson(data) : null) as T;
     }
@@ -347,12 +524,15 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i1.getType<_i8.Product?>()) {
       return (data != null ? _i8.Product.fromJson(data) : null) as T;
     }
-    if (t == List<_i9.Expense>) {
-      return (data as List).map((e) => deserialize<_i9.Expense>(e)).toList()
+    if (t == _i1.getType<_i9.Supplier?>()) {
+      return (data != null ? _i9.Supplier.fromJson(data) : null) as T;
+    }
+    if (t == List<_i10.Expense>) {
+      return (data as List).map((e) => deserialize<_i10.Expense>(e)).toList()
           as T;
     }
-    if (t == List<_i10.Product>) {
-      return (data as List).map((e) => deserialize<_i10.Product>(e)).toList()
+    if (t == List<_i11.Product>) {
+      return (data as List).map((e) => deserialize<_i11.Product>(e)).toList()
           as T;
     }
     if (t == Map<String, dynamic>) {
@@ -379,6 +559,7 @@ class Protocol extends _i1.SerializationManagerServer {
       _i6.Expense => 'Expense',
       _i7.Greeting => 'Greeting',
       _i8.Product => 'Product',
+      _i9.Supplier => 'Supplier',
       _ => null,
     };
   }
@@ -404,6 +585,8 @@ class Protocol extends _i1.SerializationManagerServer {
         return 'Greeting';
       case _i8.Product():
         return 'Product';
+      case _i9.Supplier():
+        return 'Supplier';
     }
     className = _i2.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -437,6 +620,9 @@ class Protocol extends _i1.SerializationManagerServer {
     }
     if (dataClassName == 'Product') {
       return deserialize<_i8.Product>(data['data']);
+    }
+    if (dataClassName == 'Supplier') {
+      return deserialize<_i9.Supplier>(data['data']);
     }
     if (dataClassName.startsWith('serverpod.')) {
       data['className'] = dataClassName.substring(10);
@@ -480,6 +666,8 @@ class Protocol extends _i1.SerializationManagerServer {
         return _i6.Expense.t;
       case _i8.Product:
         return _i8.Product.t;
+      case _i9.Supplier:
+        return _i9.Supplier.t;
     }
     return null;
   }
