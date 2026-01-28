@@ -70,7 +70,7 @@ class ActionCard extends StatelessWidget {
                       );
                     },
                   ),
-                  if (actionType == 'updateStock' && !canAfford) ...[
+                  if ((actionType == 'updateStock' || actionType == 'addProduct') && !canAfford) ...[
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -149,9 +149,9 @@ class ActionCard extends StatelessWidget {
   }
 
   Future<bool> _checkAffordability() async {
-    if (actionType == 'updateStock') {
-      final quantity = actionData['quantity'] ?? 0;
-      final productPrice = actionData['product_price'] ?? 0.0;
+    if (actionType == 'updateStock' || actionType == 'addProduct') {
+      final quantity = actionData['quantity'] ?? 1;
+      final productPrice = actionData['product_price'] ?? actionData['price'] ?? 0.0;
       final totalCost = quantity * productPrice;
       return await AccountHelper.canAfford(totalCost);
     }

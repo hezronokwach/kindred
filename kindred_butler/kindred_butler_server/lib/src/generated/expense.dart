@@ -18,6 +18,8 @@ abstract class Expense
     this.id,
     required this.category,
     required this.amount,
+    this.productName,
+    this.description,
     DateTime? date,
   }) : date = date ?? DateTime.now();
 
@@ -25,6 +27,8 @@ abstract class Expense
     int? id,
     required String category,
     required double amount,
+    String? productName,
+    String? description,
     DateTime? date,
   }) = _ExpenseImpl;
 
@@ -33,6 +37,8 @@ abstract class Expense
       id: jsonSerialization['id'] as int?,
       category: jsonSerialization['category'] as String,
       amount: (jsonSerialization['amount'] as num).toDouble(),
+      productName: jsonSerialization['productName'] as String?,
+      description: jsonSerialization['description'] as String?,
       date: jsonSerialization['date'] == null
           ? null
           : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['date']),
@@ -50,6 +56,10 @@ abstract class Expense
 
   double amount;
 
+  String? productName;
+
+  String? description;
+
   DateTime date;
 
   @override
@@ -62,6 +72,8 @@ abstract class Expense
     int? id,
     String? category,
     double? amount,
+    String? productName,
+    String? description,
     DateTime? date,
   });
   @override
@@ -71,6 +83,8 @@ abstract class Expense
       if (id != null) 'id': id,
       'category': category,
       'amount': amount,
+      if (productName != null) 'productName': productName,
+      if (description != null) 'description': description,
       'date': date.toJson(),
     };
   }
@@ -82,6 +96,8 @@ abstract class Expense
       if (id != null) 'id': id,
       'category': category,
       'amount': amount,
+      if (productName != null) 'productName': productName,
+      if (description != null) 'description': description,
       'date': date.toJson(),
     };
   }
@@ -123,11 +139,15 @@ class _ExpenseImpl extends Expense {
     int? id,
     required String category,
     required double amount,
+    String? productName,
+    String? description,
     DateTime? date,
   }) : super._(
          id: id,
          category: category,
          amount: amount,
+         productName: productName,
+         description: description,
          date: date,
        );
 
@@ -139,12 +159,16 @@ class _ExpenseImpl extends Expense {
     Object? id = _Undefined,
     String? category,
     double? amount,
+    Object? productName = _Undefined,
+    Object? description = _Undefined,
     DateTime? date,
   }) {
     return Expense(
       id: id is int? ? id : this.id,
       category: category ?? this.category,
       amount: amount ?? this.amount,
+      productName: productName is String? ? productName : this.productName,
+      description: description is String? ? description : this.description,
       date: date ?? this.date,
     );
   }
@@ -160,6 +184,16 @@ class ExpenseUpdateTable extends _i1.UpdateTable<ExpenseTable> {
 
   _i1.ColumnValue<double, double> amount(double value) => _i1.ColumnValue(
     table.amount,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> productName(String? value) => _i1.ColumnValue(
+    table.productName,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> description(String? value) => _i1.ColumnValue(
+    table.description,
     value,
   );
 
@@ -180,6 +214,14 @@ class ExpenseTable extends _i1.Table<int?> {
       'amount',
       this,
     );
+    productName = _i1.ColumnString(
+      'productName',
+      this,
+    );
+    description = _i1.ColumnString(
+      'description',
+      this,
+    );
     date = _i1.ColumnDateTime(
       'date',
       this,
@@ -193,6 +235,10 @@ class ExpenseTable extends _i1.Table<int?> {
 
   late final _i1.ColumnDouble amount;
 
+  late final _i1.ColumnString productName;
+
+  late final _i1.ColumnString description;
+
   late final _i1.ColumnDateTime date;
 
   @override
@@ -200,6 +246,8 @@ class ExpenseTable extends _i1.Table<int?> {
     id,
     category,
     amount,
+    productName,
+    description,
     date,
   ];
 }

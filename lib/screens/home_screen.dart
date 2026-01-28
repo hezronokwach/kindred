@@ -130,6 +130,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ),
           ),
           IconButton(
+            onPressed: () => _showSettings(context, appState),
+            icon: const Icon(Icons.settings, color: AppTheme.black),
+            tooltip: 'Settings',
+          ),
+          IconButton(
             onPressed: () {
               Navigator.push(
                 context,
@@ -140,6 +145,53 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             tooltip: 'Run Tests',
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSettings(BuildContext context, AppState appState) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppTheme.lg),
+        decoration: const BoxDecoration(
+          color: AppTheme.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Voice Settings',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppTheme.md),
+            SwitchListTile(
+              title: const Text('Voice Feedback'),
+              subtitle: const Text('Hear the agent\'s response'),
+              value: appState.isVoiceEnabled,
+              onChanged: (value) => appState.isVoiceEnabled = value,
+              activeColor: AppTheme.emerald,
+            ),
+            const SizedBox(height: AppTheme.sm),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text('Voice Speed'),
+            ),
+            Slider(
+              value: appState.voiceSpeed,
+              min: 0.5,
+              max: 2.0,
+              divisions: 6,
+              label: '${appState.voiceSpeed}x',
+              onChanged: (value) => appState.voiceSpeed = value,
+              activeColor: AppTheme.emerald,
+            ),
+            const SizedBox(height: AppTheme.lg),
+          ],
+        ),
       ),
     );
   }

@@ -3,9 +3,13 @@ table: expenses
 fields:
   category: String
   amount: double
+  productName: String?
+  description: String?
   date: DateTime, default=now
 indexes:
   expense_category_idx:
     fields: category
   expense_date_idx:
     fields: date
+  expense_product_idx:
+    fields: productName

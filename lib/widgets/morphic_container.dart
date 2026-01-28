@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/morphic_state.dart';
+import '../models/morphic_state.dart' as morphic;
 import 'inventory_table.dart';
 import 'finance_chart.dart';
 import 'product_image_card.dart';
@@ -7,7 +7,7 @@ import 'action_card.dart';
 import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class MorphicContainer extends StatelessWidget {
-  final MorphicState state;
+  final morphic.MorphicState state;
   final Function(String, Map<String, dynamic>)? onActionConfirm;
   final VoidCallback? onActionCancel;
 
@@ -43,7 +43,7 @@ class MorphicContainer extends StatelessWidget {
 
   Widget _buildContentForMode() {
     return Container(
-      key: ValueKey(state.uiMode),
+      key: ValueKey('${state.intent}_${state.uiMode}'),
       child: Column(
         children: [
           if (state.headerText != null && state.headerText!.isNotEmpty)
@@ -80,22 +80,22 @@ class MorphicContainer extends StatelessWidget {
 
   Widget _getWidgetForMode() {
     switch (state.uiMode) {
-      case UIMode.table:
+      case morphic.UIMode.table:
         final products = state.data['products'] as List<client.Product>? ?? [];
         return InventoryTable(products: products);
 
-      case UIMode.chart:
+      case morphic.UIMode.chart:
         final expenses = state.data['expenses'] as List<client.Expense>? ?? [];
         return FinanceChart(expenses: expenses);
 
-      case UIMode.image:
+      case morphic.UIMode.image:
         final product = state.data['product'] as client.Product?;
         if (product != null) {
           return ProductImageCard(product: product);
         }
         return _buildNarrativeView();
 
-      case UIMode.action:
+      case morphic.UIMode.action:
         final actionType = state.data['action_type'] as String?;
         final actionData = state.data['action_data'] as Map<String, dynamic>?;
         if (actionType != null && actionData != null) {
@@ -108,7 +108,7 @@ class MorphicContainer extends StatelessWidget {
         }
         return _buildNarrativeView();
 
-      case UIMode.narrative:
+      case morphic.UIMode.narrative:
         return _buildNarrativeView();
     }
   }
@@ -123,7 +123,7 @@ class MorphicContainer extends StatelessWidget {
             if (state.narrative.isEmpty) ...[
               _buildWelcomeAnimation(),
             ] else ...[
-              if (state.confidence < 0.7) ...[
+              if (state.confidence < 0.7 && state.intent == morphic.Intent.unknown) ...[
                 const Icon(Icons.help_outline, size: 48, color: Color(0xFF10B981)),
                 const SizedBox(height: 16),
                 const Text(

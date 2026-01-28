@@ -5,39 +5,52 @@ class ServerpodService {
   
   static Future<void> initialize(String serverUrl) async {
     _client = Client(serverUrl);
-    
-    // Initialize with sample data if needed
     await _initializeSampleData();
   }
 
   static Future<void> _initializeSampleData() async {
     try {
-      // Use the seed endpoint to initialize data
-      final result = await _client.seed.seedDatabase();
-      print('Seeding result: $result');
+      await _client.seed.seedDatabase();
     } catch (e) {
-      // Silently handle initialization errors
       print('Seeding failed: $e');
     }
   }
 
-
-
   // Product operations
   static Future<List<Product>> getProducts() async {
-    return await _client.product.getAllProducts();
+    try {
+      return await _client.product.getAllProducts();
+    } catch (e) {
+      print('Error fetching products: $e');
+      return [];
+    }
   }
 
   static Future<Product?> getProductById(int id) async {
-    return await _client.product.getProductById(id);
+    try {
+      return await _client.product.getProductById(id);
+    } catch (e) {
+      print('Error fetching product: $e');
+      return null;
+    }
   }
 
   static Future<List<Product>> getProductsByName(String name) async {
-    return await _client.product.getProductsByName(name);
+    try {
+      return await _client.product.getProductsByName(name);
+    } catch (e) {
+      print('Error searching products: $e');
+      return [];
+    }
   }
 
   static Future<Product?> updateProductStock(int id, int newStock) async {
-    return await _client.product.updateStock(id, newStock);
+    try {
+      return await _client.product.updateStock(id, newStock);
+    } catch (e) {
+      print('Error updating stock: $e');
+      return null;
+    }
   }
 
   static Future<Product> addProduct(Product product) async {
@@ -46,17 +59,25 @@ class ServerpodService {
 
   static Future<bool> deleteProduct(int id) async {
     try {
-      await _client.product.deleteProduct(id);
-      return true;
+      return await _client.product.deleteProduct(id);
     } catch (e) {
+      print('Error deleting product: $e');
       return false;
     }
   }
 
   // Account operations
   static Future<double> getAccountBalance() async {
-    final account = await _client.account.getAccount();
-    return account?.balance ?? 0.0;
+    try {
+      final account = await _client.account.getAccount();
+      if (account != null) {
+        return account.balance;
+      }
+      return 0.0;
+    } catch (e) {
+      print('Error fetching balance: $e');
+      return 0.0;
+    }
   }
 
   static Future<Account> updateAccountBalance(double newBalance) async {
@@ -68,7 +89,12 @@ class ServerpodService {
   }
 
   static Future<Account?> subtractFromBalance(double amount) async {
-    return await _client.account.subtractFromBalance(amount);
+    try {
+      return await _client.account.subtractFromBalance(amount);
+    } catch (e) {
+      print('Error subtracting from balance: $e');
+      return null;
+    }
   }
 
   // Seed operations
@@ -91,11 +117,21 @@ class ServerpodService {
 
   // Expense operations
   static Future<List<Expense>> getExpenses() async {
-    return await _client.expense.getAllExpenses();
+    try {
+      return await _client.expense.getAllExpenses();
+    } catch (e) {
+      print('Error fetching expenses: $e');
+      return [];
+    }
   }
 
   static Future<List<Expense>> getExpensesByCategory(String category) async {
-    return await _client.expense.getExpensesByCategory(category);
+    try {
+      return await _client.expense.getExpensesByCategory(category);
+    } catch (e) {
+      print('Error fetching expenses by category: $e');
+      return [];
+    }
   }
 
   static Future<Expense> addExpense(Expense expense) async {
@@ -103,6 +139,11 @@ class ServerpodService {
   }
 
   static Future<bool> deleteExpense(int id) async {
-    return await _client.expense.deleteExpense(id);
+    try {
+      return await _client.expense.deleteExpense(id);
+    } catch (e) {
+      print('Error deleting expense: $e');
+      return false;
+    }
   }
 }
