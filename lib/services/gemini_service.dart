@@ -24,12 +24,22 @@ JSON: {"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|a
 Rules:
 - "can I afford" / "afford" → accountBalance+narrative (calculate: quantity × price, compare to balance, answer yes/no with numbers)
 - "order" / "buy" / "purchase" → updateStock+action
-- "show inventory" / "inventory" → inventory+table
-- "show [product]" / "display [product]" → retail+image+{"product_name":"[product]"}
+- "show inventory" / "all products" → inventory+table (no filters)
+- "show [specific product name]" / "display [specific product name]" → retail+image+{"product_name":"[product]"} (single product card)
 - "expenses" / "spending" → finance+chart
 - Balance query → accountBalance+narrative
+- "sort by stock ascending" / "sort by stock lowest first" → inventory+table+{"sort_by":"stock_asc"}
+- "sort by stock descending" / "sort by stock highest first" → inventory+table+{"sort_by":"stock_desc"}
+- "sort by price ascending" / "sort by price lowest first" → inventory+table+{"sort_by":"price_asc"}
+- "sort by price descending" / "sort by price highest first" → inventory+table+{"sort_by":"price_desc"}
+- "which has lowest stock" / "product with least stock" → inventory+table+{"sort_by":"stock_asc","limit":1}
+- "which has highest stock" / "product with most stock" → inventory+table+{"sort_by":"stock_desc","limit":1}
+- "stock less than X" / "stock < X" → inventory+table+{"stock_filter":"<X"}
+- "stock more than X" / "stock > X" → inventory+table+{"stock_filter":">X"}
+- "price less than X" / "price < X" / "under \$X" → inventory+table+{"price_filter":"<X"}
+- "price more than X" / "price > X" / "over \$X" → inventory+table+{"price_filter":">X"}
 
-Ex: "can I afford 10 Nike Air Max"→accountBalance,narrative,"10 Nike Air Max costs \$1200. You have \$$balance. Yes, you can afford it." | "show Nike Air Max"→retail,image,{"product_name":"Nike Air Max"} | "show inventory"→inventory,table''';
+Ex: "show Nike Air Max"→retail,image,{"product_name":"Nike Air Max"} | "which product has the lowest stock"→inventory,table,{"sort_by":"stock_asc","limit":1} | "show stock less than 50"→inventory,table,{"stock_filter":"<50"} | "sort products by price ascending"→inventory,table,{"sort_by":"price_asc"}''';
   }
 
   Future<morphic.MorphicState> analyzeQuery(String userInput) async {
@@ -199,12 +209,51 @@ Ex: "can I afford 10 Nike Air Max"→accountBalance,narrative,"10 Nike Air Max c
         }
       }
       
+      // Apply price filter if present
+      if (entities.containsKey('price_filter')) {
+        final filter = entities['price_filter'];
+        if (filter.startsWith('<')) {
+          final threshold = double.tryParse(filter.substring(1)) ?? 0;
+          filteredProducts = filteredProducts.where((p) => p.price < threshold).toList();
+        } else if (filter.startsWith('>')) {
+          final threshold = double.tryParse(filter.substring(1)) ?? 0;
+          filteredProducts = filteredProducts.where((p) => p.price > threshold).toList();
+        }
+      }
+      
       // Apply product name filter if present
       if (entities.containsKey('product_name')) {
         final productName = entities['product_name'];
         filteredProducts = filteredProducts.where(
           (p) => p.name.toLowerCase().contains(productName.toLowerCase())
         ).toList();
+      }
+      
+      // Apply sorting if present (only when explicitly requested)
+      if (entities.containsKey('sort_by')) {
+        final sortBy = entities['sort_by'];
+        switch (sortBy) {
+          case 'stock_asc':
+            filteredProducts.sort((a, b) => a.stockCount.compareTo(b.stockCount));
+            break;
+          case 'stock_desc':
+            filteredProducts.sort((a, b) => b.stockCount.compareTo(a.stockCount));
+            break;
+          case 'price_asc':
+            filteredProducts.sort((a, b) => a.price.compareTo(b.price));
+            break;
+          case 'price_desc':
+            filteredProducts.sort((a, b) => b.price.compareTo(a.price));
+            break;
+        }
+      }
+      
+      // Apply limit if present (for "which has lowest/highest" queries)
+      if (entities.containsKey('limit')) {
+        final limit = entities['limit'];
+        if (limit is int && limit > 0 && filteredProducts.isNotEmpty) {
+          filteredProducts = filteredProducts.take(limit).toList();
+        }
       }
       
       data['products'] = filteredProducts;
