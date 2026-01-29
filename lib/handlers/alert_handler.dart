@@ -45,40 +45,60 @@ class AlertHandler implements IntentHandler {
       );
     }
     
-    // 2. Check Alerts (Manual Check)
+    // 2. Check Alerts (Fetch from DB and evaluate)
     if (entities.containsKey('check_alerts')) {
-      // Logic to scan products against "hardcoded" rules or fetched alerts from DB
-      // For this hackathon scope, we'll implement the logic directly
-      
       List<String> activeAlerts = [];
       
-      // Stock Checks
-      for (var p in products) {
-        if (p.stockCount < p.minStockThreshold) {
-          activeAlerts.add('⚠️ **${p.name}** is low (${p.stockCount} remaining). Reorder needed.');
-        }
-      }
+      // Fetch all active alerts from database
+      final savedAlerts = await ServerpodService.client.alert.getAlerts();
       
-      // Expense Checks (Simple monthly check)
-      final now = DateTime.now();
-      final thisMonthExpense = expenses.where((e) => e.type == 'expense' && e.date.month == now.month).fold(0.0, (sum, e) => sum + e.amount);
-      if (thisMonthExpense > 5000) { // Example threshold
-        activeAlerts.add('💸 **High Spending**: \$${thisMonthExpense.toStringAsFixed(0)} this month.');
+      for (var alert in savedAlerts) {
+        if (alert.type == 'stock') {
+          // Stock alerts
+          if (alert.productFilter != null) {
+            // Specific product alert
+            final product = products.firstWhere(
+              (p) => p.name.toLowerCase().contains(alert.productFilter!.toLowerCase()),
+              orElse: () => products.first,
+            );
+            
+            if (_checkThreshold(product.stockCount.toDouble(), alert.threshold, alert.comparison)) {
+              activeAlerts.add('⚠️ **${product.name}** stock is ${product.stockCount} (threshold: ${alert.threshold.toInt()})');
+            }
+          } else {
+            // General stock alert (any product)
+            for (var p in products) {
+              if (_checkThreshold(p.stockCount.toDouble(), alert.threshold, alert.comparison)) {
+                activeAlerts.add('⚠️ **${p.name}** stock is ${p.stockCount} (threshold: ${alert.threshold.toInt()})');
+              }
+            }
+          }
+        } else if (alert.type == 'expense') {
+          // Expense alerts
+          final now = DateTime.now();
+          final thisMonthExpense = expenses
+              .where((e) => e.type == 'expense' && e.date.month == now.month)
+              .fold(0.0, (sum, e) => sum + e.amount);
+          
+          if (_checkThreshold(thisMonthExpense, alert.threshold, alert.comparison)) {
+            activeAlerts.add('💸 **High Spending**: \$${thisMonthExpense.toStringAsFixed(0)} this month (threshold: \$${alert.threshold.toInt()})');
+          }
+        }
       }
 
       if (activeAlerts.isEmpty) {
-         return MorphicState(
+        return MorphicState(
           intent: intent,
           uiMode: UIMode.narrative,
           headerText: '✅ All Clear',
-          narrative: 'No active alerts. Inventory and spending look stable.',
+          narrative: 'No active alerts. All thresholds are within safe limits.',
           confidence: 1.0,
         );
       }
 
       return MorphicState(
         intent: intent,
-        uiMode: UIMode.narrative, // Could be a list in future
+        uiMode: UIMode.narrative,
         headerText: '🚨 Active Alerts',
         narrative: activeAlerts.join('\n\n'),
         confidence: 1.0,
@@ -86,5 +106,20 @@ class AlertHandler implements IntentHandler {
     }
 
     return MorphicState.initial();
+  }
+  
+  bool _checkThreshold(double value, double threshold, String comparison) {
+    switch (comparison) {
+      case 'lt':
+        return value < threshold;
+      case 'gt':
+        return value > threshold;
+      case 'lte':
+        return value <= threshold;
+      case 'gte':
+        return value >= threshold;
+      default:
+        return value < threshold; // Default to less than
+    }
   }
 }
