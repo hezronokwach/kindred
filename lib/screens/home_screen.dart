@@ -1,9 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart'; // Added for Material widgets like StatefulWidget, State, etc.
+import 'package:flutter/services.dart'; // Added for HapticFeedback
+import 'package:provider/provider.dart'; // Added for Consumer and context.read
+import 'dart:math' as math; // Added for math.sin
+
 import '../main.dart';
 import '../widgets/morphic_container.dart';
-import '../utils/app_theme.dart';
+import '../widgets/glassmorphic_card.dart';
+import '../models/morphic_state.dart' as morphic; // Added as per instruction
+import '../utils/app_colors.dart'; // Added as it was missing from the original list but used
+import '../utils/app_typography.dart'; // Added as it was missing from the original list but used
+import '../utils/app_animations.dart';
 import 'test_screen.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -16,19 +23,19 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool _isListening = false;
   late AnimationController _pulseController;
-  late AnimationController _shineController;
+  late AnimationController _waveController;
 
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-    
-    _shineController = AnimationController(
-      vsync: this,
       duration: const Duration(milliseconds: 2000),
+    )..repeat();
+    
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
     )..repeat();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -42,12 +49,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _pulseController.dispose();
-    _shineController.dispose();
+    _waveController.dispose();
     super.dispose();
   }
 
   Future<void> _handleMicPress() async {
-    HapticFeedback.heavyImpact();
+    HapticFeedback.mediumImpact();
     final appState = context.read<AppState>();
     setState(() => _isListening = true);
     
@@ -63,17 +70,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     } catch (e) {
       HapticFeedback.heavyImpact();
     } finally {
-      setState(() => _isListening = false);
+      if (mounted) setState(() => _isListening = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.offWhite,
+      backgroundColor: AppColors.slateDark,
       body: Stack(
         children: [
-          _buildBackgroundPattern(),
+          _buildAnimatedBackground(),
           Consumer<AppState>(
             builder: (context, appState, child) {
               return SafeArea(
@@ -84,18 +91,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       _buildTranscriptionBadge(appState.lastTranscription),
                     Expanded(
                       child: appState.isProcessing
-                          ? _buildLoadingState()
+                          ? _buildProcessingState()
                           : AnimatedSwitcher(
-                              duration: AppTheme.medium,
+                              duration: AppAnimations.medium,
+                              switchInCurve: AppAnimations.standardCurve,
                               child: MorphicContainer(
-                                key: ValueKey(appState.currentState.uiMode),
+                                key: ValueKey('${appState.currentState.intent}_${appState.currentState.uiMode}'),
                                 state: appState.currentState,
                                 onActionConfirm: appState.handleActionConfirm,
                                 onActionCancel: appState.handleActionCancel,
                               ),
                             ),
                     ),
-                    _buildMicButton(appState),
+                    _buildFooter(appState),
                   ],
                 ),
               );
@@ -106,46 +114,83 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBackgroundPattern() {
+  Widget _buildAnimatedBackground() {
     return Positioned.fill(
-      child: CustomPaint(
-        painter: BackgroundPatternPainter(),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.7, -0.6),
+            radius: 1.2,
+            colors: [
+              Color(0xFF1E3A32), // Deep Emerald
+              AppColors.slateDark,
+            ],
+          ),
+        ),
+        child: Opacity(
+          opacity: 0.1,
+          child: CustomPaint(
+            painter: GridPainter(),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildHeader(AppState appState) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.md, vertical: AppTheme.sm),
+      padding: const EdgeInsets.fromLTRB(24, 16, 12, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'KINDRED AI',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.black,
-              letterSpacing: 1.2,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'KINDRED',
+                style: AppTypography.headline.copyWith(
+                  fontSize: 16,
+                  letterSpacing: 4,
+                  color: AppColors.emeraldPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'VOICE ASSISTANT',
+                style: AppTypography.caption.copyWith(
+                  fontSize: 8,
+                  letterSpacing: 2,
+                  color: AppColors.gray600,
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: () => _showSettings(context, appState),
-            icon: const Icon(Icons.settings, color: AppTheme.black),
-            tooltip: 'Settings',
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TestScreen()),
-              );
-            },
-            icon: const Icon(Icons.science, color: AppTheme.emerald),
-            tooltip: 'Run Tests',
+          Row(
+            children: [
+              _buildHeaderIcon(
+                icon: Icons.science_outlined,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TestScreen()),
+                ),
+                color: AppColors.emeraldPrimary,
+              ),
+              _buildHeaderIcon(
+                icon: Icons.tune_rounded,
+                onPressed: () => _showSettings(context, appState),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeaderIcon({required IconData icon, required VoidCallback onPressed, Color? color}) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon, color: color ?? AppColors.white.withOpacity(0.5), size: 20),
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -153,150 +198,224 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppTheme.lg),
-        decoration: const BoxDecoration(
-          color: AppTheme.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (context) => BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: AppColors.slateMedium.withOpacity(0.9),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: AppColors.white.withOpacity(0.1)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Voice Interface', style: AppTypography.title),
+              const SizedBox(height: 24),
+              _buildSettingItem(
+                title: 'Narration',
+                subtitle: 'Audible AI responses',
+                trailing: Switch(
+                  value: appState.isVoiceEnabled,
+                  onChanged: (v) => setState(() => appState.isVoiceEnabled = v),
+                  activeColor: AppColors.emeraldPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildSettingItem(
+                title: 'Playback Speed',
+                subtitle: 'Current: ${appState.voiceSpeed}x',
+                trailing: SizedBox(
+                  width: 150,
+                  child: Slider(
+                    value: appState.voiceSpeed,
+                    // Removed 'isCurved: true,' as it's not a valid Slider property
+                    min: 0.5,
+                    max: 2.0,
+                    divisions: 6,
+                    onChanged: (v) => setState(() => appState.voiceSpeed = v),
+                    activeColor: AppColors.emeraldPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Widget _buildSettingItem({required String title, required String subtitle, required Widget trailing}) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+              Text(subtitle, style: AppTypography.caption),
+            ],
+          ),
+        ),
+        trailing,
+      ],
+    );
+  }
+
+  Widget _buildTranscriptionBadge(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: GlassmorphicCard(
+        borderRadius: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
           children: [
-            const Text(
-              'Voice Settings',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const Icon(Icons.blur_on, color: AppColors.emeraldPrimary, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTypography.body.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.white.withOpacity(0.9),
+                ),
+              ),
             ),
-            const SizedBox(height: AppTheme.md),
-            SwitchListTile(
-              title: const Text('Voice Feedback'),
-              subtitle: const Text('Hear the agent\'s response'),
-              value: appState.isVoiceEnabled,
-              onChanged: (value) => appState.isVoiceEnabled = value,
-              activeColor: AppTheme.emerald,
-            ),
-            const SizedBox(height: AppTheme.sm),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text('Voice Speed'),
-            ),
-            Slider(
-              value: appState.voiceSpeed,
-              min: 0.5,
-              max: 2.0,
-              divisions: 6,
-              label: '${appState.voiceSpeed}x',
-              onChanged: (value) => appState.voiceSpeed = value,
-              activeColor: AppTheme.emerald,
-            ),
-            const SizedBox(height: AppTheme.lg),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTranscriptionBadge(String text) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.md, vertical: AppTheme.xs),
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.sm, vertical: AppTheme.xs),
-      decoration: BoxDecoration(
-        color: AppTheme.orange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.orange.withValues(alpha: 0.3)),
-      ),
-      child: Row(
+  Widget _buildProcessingState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.mic, size: 16, color: Color(0xFF10B981)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '"$text"',
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.black,
-                fontStyle: FontStyle.italic,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          SizedBox(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return AnimatedBuilder(
+                  animation: _waveController,
+                  builder: (context, child) {
+                    final delay = index * 0.2;
+                    final value = math.sin((_waveController.value * 2 * math.pi) - (delay * 2 * math.pi));
+                    return Container(
+                      width: 8,
+                      height: 8 + (value * 12).abs(),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.emeraldPrimary.withOpacity(0.3 + (value.abs() * 0.7)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    );
+                  },
+                );
+              }),
             ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Analyzing Business Intelligence...',
+            style: AppTypography.caption.copyWith(letterSpacing: 1),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLoadingState() {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.lg),
-        decoration: AppTheme.whiteCard(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildFooter(AppState appState) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 32, top: 16),
+      child: Center(
+        child: _buildMicButton(),
+      ),
+    );
+  }
+
+  Widget _buildMicButton() {
+    return GestureDetector(
+      onTap: _handleMicPress,
+      child: SizedBox(
+        width: 80,
+        height: 80,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
           children: [
-            Container(
+            if (_isListening)
+              ...List.generate(2, (index) {
+                return AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    final progress = (_pulseController.value + index * 0.5) % 1.0;
+                    return Container(
+                      width: 80 + (progress * 80),
+                      height: 80 + (progress * 80),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.emeraldPrimary.withOpacity((1 - progress) * 0.5),
+                          width: 2,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+            AnimatedContainer(
+              duration: AppAnimations.fast,
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                gradient: AppTheme.orangeGradient,
+                gradient: _isListening ? AppColors.primaryGradient : null,
+                color: _isListening ? null : AppColors.slateMedium,
                 shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
-                  strokeWidth: 3,
+                boxShadow: [
+                  BoxShadow(
+                    color: (_isListening ? AppColors.emeraldPrimary : Colors.black).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+                border: Border.all(
+                  color: AppColors.white.withOpacity(0.1),
+                  width: 1,
                 ),
               ),
+              child: Icon(
+                _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                size: 36,
+                color: _isListening ? AppColors.white : AppColors.emeraldPrimary,
+              ),
             ),
-            const SizedBox(height: AppTheme.md),
-            const Text('Processing...', style: AppTheme.narrativeText),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildMicButton(AppState appState) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.md),
-      child: GestureDetector(
-        onTap: appState.isProcessing ? null : _handleMicPress,
-        child: AnimatedContainer(
-          duration: AppTheme.fast,
-          width: 72,
-          height: 72,
-          decoration: _isListening
-              ? AppTheme.orangeButton()
-              : AppTheme.blackCard(borderRadius: 36),
-          child: Icon(
-            _isListening ? Icons.mic : Icons.mic_none,
-            size: 32,
-            color: _isListening ? AppTheme.white : AppTheme.orange,
-          ),
-        ),
-      ),
-    );
-  }
-
-
 }
 
-class BackgroundPatternPainter extends CustomPainter {
+class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppTheme.emerald.withValues(alpha: 0.04)
-      ..strokeWidth = 1;
+      ..color = AppColors.white.withOpacity(0.1)
+      ..strokeWidth = 0.5;
 
-    const spacing = 50.0;
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        canvas.drawCircle(Offset(x + 25, y + 25), 3, paint);
-        canvas.drawCircle(Offset(x, y), 1.5, paint..color = AppTheme.emerald.withValues(alpha: 0.02));
-      }
+    const spacing = 40.0;
+    for (double i = 0; i < size.width; i += spacing) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
+    }
+    for (double i = 0; i < size.height; i += spacing) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
