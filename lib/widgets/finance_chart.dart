@@ -6,19 +6,114 @@ import '../utils/app_theme.dart';
 class FinanceChart extends StatelessWidget {
   final List<client.Expense> expenses;
   final bool isTrend;
+  final bool isComparison;
+  final Map<String, dynamic>? comparisonData;
 
   const FinanceChart({
     super.key, 
     required this.expenses, 
     this.isTrend = false,
+    this.isComparison = false,
+    this.comparisonData,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isComparison && comparisonData != null) {
+      return _buildGroupedBarChart();
+    }
     if (isTrend) {
       return _buildLineChart();
     }
     return _buildBarChart();
+  }
+
+  Widget _buildGroupedBarChart() {
+    final Map<int, double> thisWeek = (comparisonData!['this_week'] as Map).cast<int, double>();
+    final Map<int, double> lastWeek = (comparisonData!['last_week'] as Map).cast<int, double>();
+    
+    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final maxY = [
+      ...thisWeek.values,
+      ...lastWeek.values
+    ].reduce((a, b) => a > b ? a : b) * 1.2;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: maxY,
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.9),
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                 final day = days[group.x.toInt() - 1];
+                 final isThisWeek = rodIndex == 1;
+                 return BarTooltipItem(
+                   '$day - ${isThisWeek ? 'This Week' : 'Last Week'}\n',
+                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                   children: [
+                     TextSpan(
+                       text: '\$${rod.toY.toStringAsFixed(0)}',
+                       style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.normal),
+                     ),
+                   ],
+                 );
+              },
+            ),
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt() - 1;
+                  if (index >= 0 && index < days.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(days[index], style: const TextStyle(fontSize: 12)),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) => Text('\$${value.toInt()}', style: const TextStyle(fontSize: 10)),
+              ),
+            ),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          borderData: FlBorderData(show: false),
+          barGroups: List.generate(7, (index) {
+            final day = index + 1;
+            return BarChartGroupData(
+              x: day,
+              barRods: [
+                BarChartRodData(
+                  toY: lastWeek[day] ?? 0,
+                  color: Colors.grey.withValues(alpha: 0.5),
+                  width: 12,
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                ),
+                BarChartRodData(
+                  toY: thisWeek[day] ?? 0,
+                  color: AppTheme.emerald,
+                  width: 12,
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
   }
 
   Widget _buildBarChart() {
