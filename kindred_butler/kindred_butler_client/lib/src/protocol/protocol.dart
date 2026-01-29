@@ -12,20 +12,26 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod_client/serverpod_client.dart' as _i1;
 import 'account.dart' as _i2;
-import 'expense.dart' as _i3;
-import 'greetings/greeting.dart' as _i4;
-import 'product.dart' as _i5;
-import 'supplier.dart' as _i6;
-import 'package:kindred_butler_client/src/protocol/expense.dart' as _i7;
-import 'package:kindred_butler_client/src/protocol/product.dart' as _i8;
+import 'alert.dart' as _i3;
+import 'expense.dart' as _i4;
+import 'greetings/greeting.dart' as _i5;
+import 'product.dart' as _i6;
+import 'shortcut.dart' as _i7;
+import 'supplier.dart' as _i8;
+import 'package:kindred_butler_client/src/protocol/alert.dart' as _i9;
+import 'package:kindred_butler_client/src/protocol/expense.dart' as _i10;
+import 'package:kindred_butler_client/src/protocol/product.dart' as _i11;
+import 'package:kindred_butler_client/src/protocol/shortcut.dart' as _i12;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
-    as _i9;
+    as _i13;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
-    as _i10;
+    as _i14;
 export 'account.dart';
+export 'alert.dart';
 export 'expense.dart';
 export 'greetings/greeting.dart';
 export 'product.dart';
+export 'shortcut.dart';
 export 'supplier.dart';
 export 'client.dart';
 
@@ -66,39 +72,61 @@ class Protocol extends _i1.SerializationManager {
     if (t == _i2.Account) {
       return _i2.Account.fromJson(data) as T;
     }
-    if (t == _i3.Expense) {
-      return _i3.Expense.fromJson(data) as T;
+    if (t == _i3.Alert) {
+      return _i3.Alert.fromJson(data) as T;
     }
-    if (t == _i4.Greeting) {
-      return _i4.Greeting.fromJson(data) as T;
+    if (t == _i4.Expense) {
+      return _i4.Expense.fromJson(data) as T;
     }
-    if (t == _i5.Product) {
-      return _i5.Product.fromJson(data) as T;
+    if (t == _i5.Greeting) {
+      return _i5.Greeting.fromJson(data) as T;
     }
-    if (t == _i6.Supplier) {
-      return _i6.Supplier.fromJson(data) as T;
+    if (t == _i6.Product) {
+      return _i6.Product.fromJson(data) as T;
+    }
+    if (t == _i7.Shortcut) {
+      return _i7.Shortcut.fromJson(data) as T;
+    }
+    if (t == _i8.Supplier) {
+      return _i8.Supplier.fromJson(data) as T;
     }
     if (t == _i1.getType<_i2.Account?>()) {
       return (data != null ? _i2.Account.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i3.Expense?>()) {
-      return (data != null ? _i3.Expense.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i3.Alert?>()) {
+      return (data != null ? _i3.Alert.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i4.Greeting?>()) {
-      return (data != null ? _i4.Greeting.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i4.Expense?>()) {
+      return (data != null ? _i4.Expense.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i5.Product?>()) {
-      return (data != null ? _i5.Product.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i5.Greeting?>()) {
+      return (data != null ? _i5.Greeting.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i6.Supplier?>()) {
-      return (data != null ? _i6.Supplier.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i6.Product?>()) {
+      return (data != null ? _i6.Product.fromJson(data) : null) as T;
     }
-    if (t == List<_i7.Expense>) {
-      return (data as List).map((e) => deserialize<_i7.Expense>(e)).toList()
+    if (t == _i1.getType<_i7.Shortcut?>()) {
+      return (data != null ? _i7.Shortcut.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i8.Supplier?>()) {
+      return (data != null ? _i8.Supplier.fromJson(data) : null) as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == List<_i9.Alert>) {
+      return (data as List).map((e) => deserialize<_i9.Alert>(e)).toList() as T;
+    }
+    if (t == List<_i10.Expense>) {
+      return (data as List).map((e) => deserialize<_i10.Expense>(e)).toList()
           as T;
     }
-    if (t == List<_i8.Product>) {
-      return (data as List).map((e) => deserialize<_i8.Product>(e)).toList()
+    if (t == List<_i11.Product>) {
+      return (data as List).map((e) => deserialize<_i11.Product>(e)).toList()
+          as T;
+    }
+    if (t == List<_i12.Shortcut>) {
+      return (data as List).map((e) => deserialize<_i12.Shortcut>(e)).toList()
           as T;
     }
     if (t == Map<String, dynamic>) {
@@ -108,10 +136,10 @@ class Protocol extends _i1.SerializationManager {
           as T;
     }
     try {
-      return _i9.Protocol().deserialize<T>(data, t);
+      return _i13.Protocol().deserialize<T>(data, t);
     } on _i1.DeserializationTypeNotFoundException catch (_) {}
     try {
-      return _i10.Protocol().deserialize<T>(data, t);
+      return _i14.Protocol().deserialize<T>(data, t);
     } on _i1.DeserializationTypeNotFoundException catch (_) {}
     return super.deserialize<T>(data, t);
   }
@@ -119,10 +147,12 @@ class Protocol extends _i1.SerializationManager {
   static String? getClassNameForType(Type type) {
     return switch (type) {
       _i2.Account => 'Account',
-      _i3.Expense => 'Expense',
-      _i4.Greeting => 'Greeting',
-      _i5.Product => 'Product',
-      _i6.Supplier => 'Supplier',
+      _i3.Alert => 'Alert',
+      _i4.Expense => 'Expense',
+      _i5.Greeting => 'Greeting',
+      _i6.Product => 'Product',
+      _i7.Shortcut => 'Shortcut',
+      _i8.Supplier => 'Supplier',
       _ => null,
     };
   }
@@ -142,20 +172,24 @@ class Protocol extends _i1.SerializationManager {
     switch (data) {
       case _i2.Account():
         return 'Account';
-      case _i3.Expense():
+      case _i3.Alert():
+        return 'Alert';
+      case _i4.Expense():
         return 'Expense';
-      case _i4.Greeting():
+      case _i5.Greeting():
         return 'Greeting';
-      case _i5.Product():
+      case _i6.Product():
         return 'Product';
-      case _i6.Supplier():
+      case _i7.Shortcut():
+        return 'Shortcut';
+      case _i8.Supplier():
         return 'Supplier';
     }
-    className = _i9.Protocol().getClassNameForObject(data);
+    className = _i13.Protocol().getClassNameForObject(data);
     if (className != null) {
       return 'serverpod_auth_idp.$className';
     }
-    className = _i10.Protocol().getClassNameForObject(data);
+    className = _i14.Protocol().getClassNameForObject(data);
     if (className != null) {
       return 'serverpod_auth_core.$className';
     }
@@ -171,25 +205,31 @@ class Protocol extends _i1.SerializationManager {
     if (dataClassName == 'Account') {
       return deserialize<_i2.Account>(data['data']);
     }
+    if (dataClassName == 'Alert') {
+      return deserialize<_i3.Alert>(data['data']);
+    }
     if (dataClassName == 'Expense') {
-      return deserialize<_i3.Expense>(data['data']);
+      return deserialize<_i4.Expense>(data['data']);
     }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i4.Greeting>(data['data']);
+      return deserialize<_i5.Greeting>(data['data']);
     }
     if (dataClassName == 'Product') {
-      return deserialize<_i5.Product>(data['data']);
+      return deserialize<_i6.Product>(data['data']);
+    }
+    if (dataClassName == 'Shortcut') {
+      return deserialize<_i7.Shortcut>(data['data']);
     }
     if (dataClassName == 'Supplier') {
-      return deserialize<_i6.Supplier>(data['data']);
+      return deserialize<_i8.Supplier>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);
-      return _i9.Protocol().deserializeByClassName(data);
+      return _i13.Protocol().deserializeByClassName(data);
     }
     if (dataClassName.startsWith('serverpod_auth_core.')) {
       data['className'] = dataClassName.substring(20);
-      return _i10.Protocol().deserializeByClassName(data);
+      return _i14.Protocol().deserializeByClassName(data);
     }
     return super.deserializeByClassName(data);
   }
@@ -204,10 +244,10 @@ class Protocol extends _i1.SerializationManager {
       return null;
     }
     try {
-      return _i9.Protocol().mapRecordToJson(record);
+      return _i13.Protocol().mapRecordToJson(record);
     } catch (_) {}
     try {
-      return _i10.Protocol().mapRecordToJson(record);
+      return _i14.Protocol().mapRecordToJson(record);
     } catch (_) {}
     throw Exception('Unsupported record type ${record.runtimeType}');
   }

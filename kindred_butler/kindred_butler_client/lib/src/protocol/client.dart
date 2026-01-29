@@ -17,11 +17,13 @@ import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
 import 'package:kindred_butler_client/src/protocol/account.dart' as _i5;
-import 'package:kindred_butler_client/src/protocol/expense.dart' as _i6;
-import 'package:kindred_butler_client/src/protocol/product.dart' as _i7;
+import 'package:kindred_butler_client/src/protocol/alert.dart' as _i6;
+import 'package:kindred_butler_client/src/protocol/expense.dart' as _i7;
+import 'package:kindred_butler_client/src/protocol/product.dart' as _i8;
+import 'package:kindred_butler_client/src/protocol/shortcut.dart' as _i9;
 import 'package:kindred_butler_client/src/protocol/greetings/greeting.dart'
-    as _i8;
-import 'protocol.dart' as _i9;
+    as _i10;
+import 'protocol.dart' as _i11;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -274,30 +276,58 @@ class EndpointAccount extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
+class EndpointAlert extends _i2.EndpointRef {
+  EndpointAlert(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'alert';
+
+  _i3.Future<_i6.Alert> addAlert(_i6.Alert alert) =>
+      caller.callServerEndpoint<_i6.Alert>(
+        'alert',
+        'addAlert',
+        {'alert': alert},
+      );
+
+  _i3.Future<List<_i6.Alert>> getAlerts() =>
+      caller.callServerEndpoint<List<_i6.Alert>>(
+        'alert',
+        'getAlerts',
+        {},
+      );
+
+  _i3.Future<void> deleteAlert(int id) => caller.callServerEndpoint<void>(
+    'alert',
+    'deleteAlert',
+    {'id': id},
+  );
+}
+
+/// {@category Endpoint}
 class EndpointExpense extends _i2.EndpointRef {
   EndpointExpense(_i2.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'expense';
 
-  _i3.Future<List<_i6.Expense>> getAllExpenses() =>
-      caller.callServerEndpoint<List<_i6.Expense>>(
+  _i3.Future<List<_i7.Expense>> getAllExpenses() =>
+      caller.callServerEndpoint<List<_i7.Expense>>(
         'expense',
         'getAllExpenses',
         {},
       );
 
-  _i3.Future<List<_i6.Expense>> getExpensesByCategory(String category) =>
-      caller.callServerEndpoint<List<_i6.Expense>>(
+  _i3.Future<List<_i7.Expense>> getExpensesByCategory(String category) =>
+      caller.callServerEndpoint<List<_i7.Expense>>(
         'expense',
         'getExpensesByCategory',
         {'category': category},
       );
 
-  _i3.Future<List<_i6.Expense>> getExpensesByDateRange(
+  _i3.Future<List<_i7.Expense>> getExpensesByDateRange(
     DateTime start,
     DateTime end,
-  ) => caller.callServerEndpoint<List<_i6.Expense>>(
+  ) => caller.callServerEndpoint<List<_i7.Expense>>(
     'expense',
     'getExpensesByDateRange',
     {
@@ -306,15 +336,15 @@ class EndpointExpense extends _i2.EndpointRef {
     },
   );
 
-  _i3.Future<_i6.Expense> createExpense(_i6.Expense expense) =>
-      caller.callServerEndpoint<_i6.Expense>(
+  _i3.Future<_i7.Expense> createExpense(_i7.Expense expense) =>
+      caller.callServerEndpoint<_i7.Expense>(
         'expense',
         'createExpense',
         {'expense': expense},
       );
 
-  _i3.Future<_i6.Expense?> updateExpense(_i6.Expense expense) =>
-      caller.callServerEndpoint<_i6.Expense?>(
+  _i3.Future<_i7.Expense?> updateExpense(_i7.Expense expense) =>
+      caller.callServerEndpoint<_i7.Expense?>(
         'expense',
         'updateExpense',
         {'expense': expense},
@@ -334,36 +364,36 @@ class EndpointProduct extends _i2.EndpointRef {
   @override
   String get name => 'product';
 
-  _i3.Future<List<_i7.Product>> getAllProducts() =>
-      caller.callServerEndpoint<List<_i7.Product>>(
+  _i3.Future<List<_i8.Product>> getAllProducts() =>
+      caller.callServerEndpoint<List<_i8.Product>>(
         'product',
         'getAllProducts',
         {},
       );
 
-  _i3.Future<_i7.Product?> getProductById(int id) =>
-      caller.callServerEndpoint<_i7.Product?>(
+  _i3.Future<_i8.Product?> getProductById(int id) =>
+      caller.callServerEndpoint<_i8.Product?>(
         'product',
         'getProductById',
         {'id': id},
       );
 
-  _i3.Future<List<_i7.Product>> getProductsByName(String name) =>
-      caller.callServerEndpoint<List<_i7.Product>>(
+  _i3.Future<List<_i8.Product>> getProductsByName(String name) =>
+      caller.callServerEndpoint<List<_i8.Product>>(
         'product',
         'getProductsByName',
         {'name': name},
       );
 
-  _i3.Future<_i7.Product> createProduct(_i7.Product product) =>
-      caller.callServerEndpoint<_i7.Product>(
+  _i3.Future<_i8.Product> createProduct(_i8.Product product) =>
+      caller.callServerEndpoint<_i8.Product>(
         'product',
         'createProduct',
         {'product': product},
       );
 
-  _i3.Future<_i7.Product> updateProduct(_i7.Product product) =>
-      caller.callServerEndpoint<_i7.Product>(
+  _i3.Future<_i8.Product> updateProduct(_i8.Product product) =>
+      caller.callServerEndpoint<_i8.Product>(
         'product',
         'updateProduct',
         {'product': product},
@@ -375,10 +405,10 @@ class EndpointProduct extends _i2.EndpointRef {
     {'id': id},
   );
 
-  _i3.Future<_i7.Product?> updateStock(
+  _i3.Future<_i8.Product?> updateStock(
     int productId,
     int newStockCount,
-  ) => caller.callServerEndpoint<_i7.Product?>(
+  ) => caller.callServerEndpoint<_i8.Product?>(
     'product',
     'updateStock',
     {
@@ -406,6 +436,28 @@ class EndpointSeed extends _i2.EndpointRef {
     'resetDatabase',
     {},
   );
+}
+
+/// {@category Endpoint}
+class EndpointShortcut extends _i2.EndpointRef {
+  EndpointShortcut(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'shortcut';
+
+  _i3.Future<_i9.Shortcut> addShortcut(_i9.Shortcut shortcut) =>
+      caller.callServerEndpoint<_i9.Shortcut>(
+        'shortcut',
+        'addShortcut',
+        {'shortcut': shortcut},
+      );
+
+  _i3.Future<List<_i9.Shortcut>> getShortcuts() =>
+      caller.callServerEndpoint<List<_i9.Shortcut>>(
+        'shortcut',
+        'getShortcuts',
+        {},
+      );
 }
 
 /// {@category Endpoint}
@@ -439,8 +491,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i8.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i8.Greeting>(
+  _i3.Future<_i10.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i10.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -478,7 +530,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i9.Protocol(),
+         _i11.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -490,9 +542,11 @@ class Client extends _i2.ServerpodClientShared {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     account = EndpointAccount(this);
+    alert = EndpointAlert(this);
     expense = EndpointExpense(this);
     product = EndpointProduct(this);
     seed = EndpointSeed(this);
+    shortcut = EndpointShortcut(this);
     test = EndpointTest(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
@@ -504,11 +558,15 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointAccount account;
 
+  late final EndpointAlert alert;
+
   late final EndpointExpense expense;
 
   late final EndpointProduct product;
 
   late final EndpointSeed seed;
+
+  late final EndpointShortcut shortcut;
 
   late final EndpointTest test;
 
@@ -521,9 +579,11 @@ class Client extends _i2.ServerpodClientShared {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
     'account': account,
+    'alert': alert,
     'expense': expense,
     'product': product,
     'seed': seed,
+    'shortcut': shortcut,
     'test': test,
     'greeting': greeting,
   };
