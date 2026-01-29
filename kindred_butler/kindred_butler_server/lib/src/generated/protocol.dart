@@ -17,16 +17,22 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _i4;
 import 'account.dart' as _i5;
-import 'expense.dart' as _i6;
-import 'greetings/greeting.dart' as _i7;
-import 'product.dart' as _i8;
-import 'supplier.dart' as _i9;
-import 'package:kindred_butler_server/src/generated/expense.dart' as _i10;
-import 'package:kindred_butler_server/src/generated/product.dart' as _i11;
+import 'alert.dart' as _i6;
+import 'expense.dart' as _i7;
+import 'greetings/greeting.dart' as _i8;
+import 'product.dart' as _i9;
+import 'shortcut.dart' as _i10;
+import 'supplier.dart' as _i11;
+import 'package:kindred_butler_server/src/generated/alert.dart' as _i12;
+import 'package:kindred_butler_server/src/generated/expense.dart' as _i13;
+import 'package:kindred_butler_server/src/generated/product.dart' as _i14;
+import 'package:kindred_butler_server/src/generated/shortcut.dart' as _i15;
 export 'account.dart';
+export 'alert.dart';
 export 'expense.dart';
 export 'greetings/greeting.dart';
 export 'product.dart';
+export 'shortcut.dart';
 export 'supplier.dart';
 
 class Protocol extends _i1.SerializationManagerServer {
@@ -69,6 +75,80 @@ class Protocol extends _i1.SerializationManagerServer {
       indexes: [
         _i2.IndexDefinition(
           indexName: 'account_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'alert',
+      dartName: 'Alert',
+      schema: 'public',
+      module: 'kindred_butler',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'alert_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'type',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'threshold',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'comparison',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'productFilter',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'isActive',
+          columnType: _i2.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+        ),
+        _i2.ColumnDefinition(
+          name: 'message',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'alert_pkey',
           tableSpace: null,
           elements: [
             _i2.IndexElementDefinition(
@@ -390,6 +470,75 @@ class Protocol extends _i1.SerializationManagerServer {
       managed: true,
     ),
     _i2.TableDefinition(
+      name: 'shortcut',
+      dartName: 'Shortcut',
+      schema: 'public',
+      module: 'kindred_butler',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'shortcut_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'triggerPhrase',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'actions',
+          columnType: _i2.ColumnType.json,
+          isNullable: false,
+          dartType: 'List<String>',
+        ),
+        _i2.ColumnDefinition(
+          name: 'description',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'shortcut_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+        _i2.IndexDefinition(
+          indexName: 'trigger_phrase_idx',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'triggerPhrase',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
       name: 'suppliers',
       dartName: 'Supplier',
       schema: 'public',
@@ -500,39 +649,62 @@ class Protocol extends _i1.SerializationManagerServer {
     if (t == _i5.Account) {
       return _i5.Account.fromJson(data) as T;
     }
-    if (t == _i6.Expense) {
-      return _i6.Expense.fromJson(data) as T;
+    if (t == _i6.Alert) {
+      return _i6.Alert.fromJson(data) as T;
     }
-    if (t == _i7.Greeting) {
-      return _i7.Greeting.fromJson(data) as T;
+    if (t == _i7.Expense) {
+      return _i7.Expense.fromJson(data) as T;
     }
-    if (t == _i8.Product) {
-      return _i8.Product.fromJson(data) as T;
+    if (t == _i8.Greeting) {
+      return _i8.Greeting.fromJson(data) as T;
     }
-    if (t == _i9.Supplier) {
-      return _i9.Supplier.fromJson(data) as T;
+    if (t == _i9.Product) {
+      return _i9.Product.fromJson(data) as T;
+    }
+    if (t == _i10.Shortcut) {
+      return _i10.Shortcut.fromJson(data) as T;
+    }
+    if (t == _i11.Supplier) {
+      return _i11.Supplier.fromJson(data) as T;
     }
     if (t == _i1.getType<_i5.Account?>()) {
       return (data != null ? _i5.Account.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i6.Expense?>()) {
-      return (data != null ? _i6.Expense.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i6.Alert?>()) {
+      return (data != null ? _i6.Alert.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i7.Greeting?>()) {
-      return (data != null ? _i7.Greeting.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i7.Expense?>()) {
+      return (data != null ? _i7.Expense.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i8.Product?>()) {
-      return (data != null ? _i8.Product.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i8.Greeting?>()) {
+      return (data != null ? _i8.Greeting.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i9.Supplier?>()) {
-      return (data != null ? _i9.Supplier.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i9.Product?>()) {
+      return (data != null ? _i9.Product.fromJson(data) : null) as T;
     }
-    if (t == List<_i10.Expense>) {
-      return (data as List).map((e) => deserialize<_i10.Expense>(e)).toList()
+    if (t == _i1.getType<_i10.Shortcut?>()) {
+      return (data != null ? _i10.Shortcut.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i11.Supplier?>()) {
+      return (data != null ? _i11.Supplier.fromJson(data) : null) as T;
+    }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
+    if (t == List<_i12.Alert>) {
+      return (data as List).map((e) => deserialize<_i12.Alert>(e)).toList()
           as T;
     }
-    if (t == List<_i11.Product>) {
-      return (data as List).map((e) => deserialize<_i11.Product>(e)).toList()
+    if (t == List<_i13.Expense>) {
+      return (data as List).map((e) => deserialize<_i13.Expense>(e)).toList()
+          as T;
+    }
+    if (t == List<_i14.Product>) {
+      return (data as List).map((e) => deserialize<_i14.Product>(e)).toList()
+          as T;
+    }
+    if (t == List<_i15.Shortcut>) {
+      return (data as List).map((e) => deserialize<_i15.Shortcut>(e)).toList()
           as T;
     }
     if (t == Map<String, dynamic>) {
@@ -556,10 +728,12 @@ class Protocol extends _i1.SerializationManagerServer {
   static String? getClassNameForType(Type type) {
     return switch (type) {
       _i5.Account => 'Account',
-      _i6.Expense => 'Expense',
-      _i7.Greeting => 'Greeting',
-      _i8.Product => 'Product',
-      _i9.Supplier => 'Supplier',
+      _i6.Alert => 'Alert',
+      _i7.Expense => 'Expense',
+      _i8.Greeting => 'Greeting',
+      _i9.Product => 'Product',
+      _i10.Shortcut => 'Shortcut',
+      _i11.Supplier => 'Supplier',
       _ => null,
     };
   }
@@ -579,13 +753,17 @@ class Protocol extends _i1.SerializationManagerServer {
     switch (data) {
       case _i5.Account():
         return 'Account';
-      case _i6.Expense():
+      case _i6.Alert():
+        return 'Alert';
+      case _i7.Expense():
         return 'Expense';
-      case _i7.Greeting():
+      case _i8.Greeting():
         return 'Greeting';
-      case _i8.Product():
+      case _i9.Product():
         return 'Product';
-      case _i9.Supplier():
+      case _i10.Shortcut():
+        return 'Shortcut';
+      case _i11.Supplier():
         return 'Supplier';
     }
     className = _i2.Protocol().getClassNameForObject(data);
@@ -612,17 +790,23 @@ class Protocol extends _i1.SerializationManagerServer {
     if (dataClassName == 'Account') {
       return deserialize<_i5.Account>(data['data']);
     }
+    if (dataClassName == 'Alert') {
+      return deserialize<_i6.Alert>(data['data']);
+    }
     if (dataClassName == 'Expense') {
-      return deserialize<_i6.Expense>(data['data']);
+      return deserialize<_i7.Expense>(data['data']);
     }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i7.Greeting>(data['data']);
+      return deserialize<_i8.Greeting>(data['data']);
     }
     if (dataClassName == 'Product') {
-      return deserialize<_i8.Product>(data['data']);
+      return deserialize<_i9.Product>(data['data']);
+    }
+    if (dataClassName == 'Shortcut') {
+      return deserialize<_i10.Shortcut>(data['data']);
     }
     if (dataClassName == 'Supplier') {
-      return deserialize<_i9.Supplier>(data['data']);
+      return deserialize<_i11.Supplier>(data['data']);
     }
     if (dataClassName.startsWith('serverpod.')) {
       data['className'] = dataClassName.substring(10);
@@ -662,12 +846,16 @@ class Protocol extends _i1.SerializationManagerServer {
     switch (t) {
       case _i5.Account:
         return _i5.Account.t;
-      case _i6.Expense:
-        return _i6.Expense.t;
-      case _i8.Product:
-        return _i8.Product.t;
-      case _i9.Supplier:
-        return _i9.Supplier.t;
+      case _i6.Alert:
+        return _i6.Alert.t;
+      case _i7.Expense:
+        return _i7.Expense.t;
+      case _i9.Product:
+        return _i9.Product.t;
+      case _i10.Shortcut:
+        return _i10.Shortcut.t;
+      case _i11.Supplier:
+        return _i11.Supplier.t;
     }
     return null;
   }
