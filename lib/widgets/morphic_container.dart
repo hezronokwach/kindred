@@ -86,7 +86,8 @@ class MorphicContainer extends StatelessWidget {
 
       case morphic.UIMode.chart:
         final expenses = state.data['expenses'] as List<client.Expense>? ?? [];
-        return FinanceChart(expenses: expenses);
+        final isTrend = state.data['is_trend'] as bool? ?? false;
+        return FinanceChart(expenses: expenses, isTrend: isTrend);
 
       case morphic.UIMode.image:
         final product = state.data['product'] as client.Product?;
