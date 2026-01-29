@@ -86,7 +86,8 @@ class MorphicContainer extends StatelessWidget {
 
       case morphic.UIMode.chart:
         final expenses = state.data['expenses'] as List<client.Expense>? ?? [];
-        return FinanceChart(expenses: expenses);
+        final isTrend = state.data['is_trend'] as bool? ?? false;
+        return FinanceChart(expenses: expenses, isTrend: isTrend);
 
       case morphic.UIMode.image:
         final product = state.data['product'] as client.Product?;
@@ -110,7 +111,81 @@ class MorphicContainer extends StatelessWidget {
 
       case morphic.UIMode.narrative:
         return _buildNarrativeView();
+        
+      case morphic.UIMode.dashboard:
+        return _buildDashboardView();
     }
+  }
+
+  Widget _buildDashboardView() {
+    final components = state.data['components'] as List<dynamic>? ?? [];
+    
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 80),
+      itemCount: components.length,
+      itemBuilder: (context, index) {
+        final componentData = components[index] as Map<String, dynamic>;
+        final type = componentData['type'] as String;
+        final title = componentData['title'] as String;
+        
+        Widget content;
+        
+        switch (type) {
+          case 'chart':
+            final expenses = (componentData['data'] as List).cast<client.Expense>();
+            final isTrend = componentData['is_trend'] as bool? ?? false;
+            final isComparison = componentData['is_comparison'] as bool? ?? false;
+            final comparisonData = componentData['comparison_data'] as Map<String, dynamic>?;
+            
+            content = SizedBox(
+              height: 300,
+              child: FinanceChart(
+                expenses: expenses, 
+                isTrend: isTrend,
+                isComparison: isComparison,
+                comparisonData: comparisonData,
+              ),
+            );
+            break;
+            
+          case 'table':
+            final products = (componentData['data'] as List).cast<client.Product>();
+            content = SizedBox(
+              height: 400,
+              child: InventoryTable(products: products),
+            );
+            break;
+            
+          default:
+            content = const SizedBox.shrink();
+        }
+
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          elevation: 2,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Important due to SizedBox constraints above
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              content,
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildNarrativeView() {

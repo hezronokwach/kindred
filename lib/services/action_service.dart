@@ -72,7 +72,9 @@ class ActionService {
           final newProduct = client.Product(
             name: productName,
             stockCount: quantity,
-            price: productPrice,
+            sellingPrice: productPrice,
+            costPrice: productPrice * 0.7, // Estimate cost at 70% of selling price for new products
+            brand: productName.split(' ').first,
             imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
             category: 'shoes',
           );

@@ -8,6 +8,8 @@ import '../handlers/inventory_handler.dart';
 import '../handlers/finance_handler.dart';
 import '../handlers/retail_handler.dart';
 import '../handlers/default_handler.dart';
+import '../handlers/alert_handler.dart';
+import '../handlers/shortcut_handler.dart';
 
 class GeminiService {
   final String apiKey;
@@ -22,6 +24,8 @@ class GeminiService {
     morphic.Intent.finance: FinanceHandler(),
     morphic.Intent.accountBalance: FinanceHandler(),
     morphic.Intent.retail: RetailHandler(),
+    morphic.Intent.alert: AlertHandler(),
+    morphic.Intent.shortcut: ShortcutHandler(),
   };
 
   final IntentHandler _defaultHandler = DefaultHandler();
@@ -67,7 +71,7 @@ IMPORTANT: Always call tools FIRST to get current data before providing your fin
 Once you have the tool results, use them to fulfill the user's request specifically.
 
 JSON Output Format (Strict JSON ONLY):
-{"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|accountBalance","ui_mode":"table|chart|image|narrative|action","header_text":"...","narrative":"...","entities":{},"confidence":0-1}
+{"intent":"inventory|finance|retail|updateStock|deleteProduct|addProduct|accountBalance|alert|shortcut","ui_mode":"table|chart|image|narrative|action|dashboard","header_text":"...","narrative":"...","entities":{},"confidence":0-1}
 
 Specific Rules:
 - "Can I afford [X] [Product]" -> get_account_balance + get_products. Then return intent "accountBalance" with entities {"product_name":"...", "quantity":X}.
@@ -76,6 +80,25 @@ Specific Rules:
 - "Show Nike" -> return intent "retail", ui_mode "image", entities {"product_name":"Nike"}.
 - "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
 - "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
+- "When will Nike run out" -> get_products + get_expenses. Entities: {"product_name": "Nike", "predict_stock": true}.
+- "What should I reorder" -> get_products + get_expenses. Entities: {"smart_reorder": true}.
+- "Am I spending more this month" -> get_expenses. Entities: {"trend_analysis": true}.
+- "How much profit on Nike" -> get_products + get_expenses. Entities: {"product_name": "Nike", "profit_analysis": true}.
+
+- "How much profit on Nike" -> get_products + get_expenses. Entities: {"product_name": "Nike", "profit_analysis": true}.
+
+Next Month Predictions & Comparisons:
+- "Predict expenses/revenue" -> get_expenses. Entities: {"predict_expenses": true} OR {"predict_revenue": true}.
+- "Compare spending this week vs last week" -> get_expenses. Entities: {"compare_weekly": true}.
+
+Alerts:
+- "Alert me when stock for Nike < 10" -> Entities: {"create_alert": true, "alert_type": "stock", "product_filter": "Nike", "threshold": 10, "comparison": "lt"}. Intent: "alert".
+- "Alert me when any stock < 5" -> Entities: {"create_alert": true, "alert_type": "stock", "threshold": 5}. Intent: "alert".
+- "Check alerts" -> get_products + get_expenses. Entities: {"check_alerts": true}. Intent: "alert".
+
+Shortcuts & Routines:
+- "Run daily routine" -> get_products + get_expenses. Entities: {"run_daily_routine": true}. Intent: "shortcut".
+- "Run weekly routine" -> get_expenses + get_products. Entities: {"run_weekly_routine": true}. Intent: "shortcut".
 
 Extremum Queries (Lowest/Highest):
 - "Cheapest product" -> get_products. Entities: {"sort_by": "price_asc", "limit": 1}.
@@ -93,7 +116,8 @@ Filtering & Sorting Entities:
 - Example: "Show low stock products" -> entities {"stock_filter": "<10"}.
 - Example: "Sort by price descending" -> entities {"sort_by": "price_desc"}.
 
-- Use tool data. Never say "I will check" in the final JSON narrative; provide the actual answer.''';
+- Use tool data. Never say "I will check" in the final JSON narrative; provide the actual answer.
+- If intent="shortcut", ensure ui_mode is "dashboard" in your thought process (handled by backend).''';
   }
 
   Future<morphic.MorphicState> analyzeQuery(String userInput) async {
@@ -215,7 +239,9 @@ Filtering & Sorting Entities:
         final products = await BusinessData.getProducts();
         return products.map((p) => {
           'name': p.name,
-          'price': p.price,
+          'sellingPrice': p.sellingPrice,
+          'costPrice': p.costPrice,
+          'brand': p.brand,
           'stock': p.stockCount,
           'category': p.category,
         }).toList();

@@ -1,0 +1,11 @@
+class: Shortcut
+table: shortcut
+fields:
+  triggerPhrase: String
+  actions: List<String>
+  description: String?
+  createdAt: DateTime
+indexes:
+  trigger_phrase_idx:
+    fields: triggerPhrase
+    unique: true

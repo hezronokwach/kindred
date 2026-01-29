@@ -1,0 +1,10 @@
+class: Alert
+table: alert
+fields:
+  type: String
+  threshold: double
+  comparison: String
+  productFilter: String?
+  isActive: bool
+  message: String?
+  createdAt: DateTime

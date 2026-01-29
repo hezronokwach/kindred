@@ -13,6 +13,10 @@ account:
   - updateBalance:
   - addToBalance:
   - subtractFromBalance:
+alert:
+  - addAlert:
+  - getAlerts:
+  - deleteAlert:
 expense:
   - getAllExpenses:
   - getExpensesByCategory:
@@ -31,6 +35,9 @@ product:
 seed:
   - seedDatabase:
   - resetDatabase:
+shortcut:
+  - addShortcut:
+  - getShortcuts:
 test:
   - runAllTests:
   - getSystemStatus:

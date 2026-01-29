@@ -17,19 +17,33 @@ abstract class Product implements _i1.SerializableModel {
     this.id,
     required this.name,
     required this.stockCount,
-    required this.price,
+    required this.sellingPrice,
+    required this.costPrice,
+    required this.brand,
+    this.sku,
+    String? unit,
+    int? minStockThreshold,
     this.imageUrl,
     this.category,
+    this.supplierId,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : unit = unit ?? 'pair',
+       minStockThreshold = minStockThreshold ?? 5,
+       createdAt = createdAt ?? DateTime.now();
 
   factory Product({
     int? id,
     required String name,
     required int stockCount,
-    required double price,
+    required double sellingPrice,
+    required double costPrice,
+    required String brand,
+    String? sku,
+    String? unit,
+    int? minStockThreshold,
     String? imageUrl,
     String? category,
+    int? supplierId,
     DateTime? createdAt,
   }) = _ProductImpl;
 
@@ -38,9 +52,15 @@ abstract class Product implements _i1.SerializableModel {
       id: jsonSerialization['id'] as int?,
       name: jsonSerialization['name'] as String,
       stockCount: jsonSerialization['stockCount'] as int,
-      price: (jsonSerialization['price'] as num).toDouble(),
+      sellingPrice: (jsonSerialization['sellingPrice'] as num).toDouble(),
+      costPrice: (jsonSerialization['costPrice'] as num).toDouble(),
+      brand: jsonSerialization['brand'] as String,
+      sku: jsonSerialization['sku'] as String?,
+      unit: jsonSerialization['unit'] as String?,
+      minStockThreshold: jsonSerialization['minStockThreshold'] as int?,
       imageUrl: jsonSerialization['imageUrl'] as String?,
       category: jsonSerialization['category'] as String?,
+      supplierId: jsonSerialization['supplierId'] as int?,
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -56,11 +76,23 @@ abstract class Product implements _i1.SerializableModel {
 
   int stockCount;
 
-  double price;
+  double sellingPrice;
+
+  double costPrice;
+
+  String brand;
+
+  String? sku;
+
+  String unit;
+
+  int minStockThreshold;
 
   String? imageUrl;
 
   String? category;
+
+  int? supplierId;
 
   DateTime createdAt;
 
@@ -71,9 +103,15 @@ abstract class Product implements _i1.SerializableModel {
     int? id,
     String? name,
     int? stockCount,
-    double? price,
+    double? sellingPrice,
+    double? costPrice,
+    String? brand,
+    String? sku,
+    String? unit,
+    int? minStockThreshold,
     String? imageUrl,
     String? category,
+    int? supplierId,
     DateTime? createdAt,
   });
   @override
@@ -83,9 +121,15 @@ abstract class Product implements _i1.SerializableModel {
       if (id != null) 'id': id,
       'name': name,
       'stockCount': stockCount,
-      'price': price,
+      'sellingPrice': sellingPrice,
+      'costPrice': costPrice,
+      'brand': brand,
+      if (sku != null) 'sku': sku,
+      'unit': unit,
+      'minStockThreshold': minStockThreshold,
       if (imageUrl != null) 'imageUrl': imageUrl,
       if (category != null) 'category': category,
+      if (supplierId != null) 'supplierId': supplierId,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -103,17 +147,29 @@ class _ProductImpl extends Product {
     int? id,
     required String name,
     required int stockCount,
-    required double price,
+    required double sellingPrice,
+    required double costPrice,
+    required String brand,
+    String? sku,
+    String? unit,
+    int? minStockThreshold,
     String? imageUrl,
     String? category,
+    int? supplierId,
     DateTime? createdAt,
   }) : super._(
          id: id,
          name: name,
          stockCount: stockCount,
-         price: price,
+         sellingPrice: sellingPrice,
+         costPrice: costPrice,
+         brand: brand,
+         sku: sku,
+         unit: unit,
+         minStockThreshold: minStockThreshold,
          imageUrl: imageUrl,
          category: category,
+         supplierId: supplierId,
          createdAt: createdAt,
        );
 
@@ -125,18 +181,30 @@ class _ProductImpl extends Product {
     Object? id = _Undefined,
     String? name,
     int? stockCount,
-    double? price,
+    double? sellingPrice,
+    double? costPrice,
+    String? brand,
+    Object? sku = _Undefined,
+    String? unit,
+    int? minStockThreshold,
     Object? imageUrl = _Undefined,
     Object? category = _Undefined,
+    Object? supplierId = _Undefined,
     DateTime? createdAt,
   }) {
     return Product(
       id: id is int? ? id : this.id,
       name: name ?? this.name,
       stockCount: stockCount ?? this.stockCount,
-      price: price ?? this.price,
+      sellingPrice: sellingPrice ?? this.sellingPrice,
+      costPrice: costPrice ?? this.costPrice,
+      brand: brand ?? this.brand,
+      sku: sku is String? ? sku : this.sku,
+      unit: unit ?? this.unit,
+      minStockThreshold: minStockThreshold ?? this.minStockThreshold,
       imageUrl: imageUrl is String? ? imageUrl : this.imageUrl,
       category: category is String? ? category : this.category,
+      supplierId: supplierId is int? ? supplierId : this.supplierId,
       createdAt: createdAt ?? this.createdAt,
     );
   }

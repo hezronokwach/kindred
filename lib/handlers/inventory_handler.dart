@@ -61,12 +61,71 @@ class InventoryHandler implements IntentHandler {
           'product_id': product.id?.toString() ?? '0',
           'current_stock': product.stockCount,
           'quantity': quantity,
-          'price': product.price,
+          'price': product.sellingPrice,
           'stock': 0,
-          'product_price': product.price,
+          'product_price': product.sellingPrice,
         };
       }
     } else if (intent == Intent.inventory) {
+      if (entities.containsKey('predict_stock')) {
+        final productName = entities['product_name']?.toString() ?? '';
+        final product = products.firstWhere(
+          (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
+          orElse: () => products.first,
+        );
+
+        // Calculate velocity from sale history (type == 'sale')
+        final sales = expenses.where((e) =>
+          e.type == 'sale' && (e.productName?.toLowerCase().contains(product.name.toLowerCase()) ?? false)
+        ).toList();
+
+        if (sales.isEmpty) {
+          return MorphicState(
+            intent: intent,
+            uiMode: UIMode.narrative,
+            narrative: 'I don\'t have enough sales history for ${product.name} to make a prediction yet.',
+            headerText: '⏳ Prediction Unavailable',
+            confidence: 1.0,
+          );
+        }
+
+        // Logic: Total units sold / days since first sale
+        final totalUnits = sales.length; // 1 expense = 1 sale in our simplified seed
+        final oldestSale = sales.map((e) => e.date).reduce((a, b) => a.isBefore(b) ? a : b);
+        final daysSpan = DateTime.now().difference(oldestSale).inDays.clamp(1, 365);
+        final unitsPerDay = totalUnits / daysSpan;
+        final daysUntilEmpty = (product.stockCount / (unitsPerDay > 0 ? unitsPerDay : 0.01)).round();
+        final depletionDate = DateTime.now().add(Duration(days: daysUntilEmpty));
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.narrative,
+          headerText: '⏳ Stock Prediction',
+          narrative: 'Based on current sales of ${unitsPerDay.toStringAsFixed(1)} units/day, your ${product.name} will run out in **$daysUntilEmpty days** (around ${depletionDate.month}/${depletionDate.day}).',
+          confidence: 1.0,
+        );
+      }
+
+      if (entities.containsKey('smart_reorder')) {
+        final urgent = products.where((p) => p.stockCount <= p.minStockThreshold).toList();
+        final popular = products.where((p) {
+          final salesCount = expenses.where((e) => e.type == 'sale' && e.productName == p.name).length;
+          return salesCount > 10; // High popularity threshold
+        }).toList();
+
+        final recommendations = {...urgent, ...popular}.toList();
+        recommendations.sort((a, b) => a.stockCount.compareTo(b.stockCount));
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.table,
+          headerText: '🎯 Smart Reorder List',
+          narrative: 'I recommend reordering these ${recommendations.length} items. ${urgent.length} are at or below their minimum stock threshold, and others are high-velocity items.',
+          data: {'products': recommendations.take(5).toList()},
+          confidence: 1.0,
+        );
+      }
+
       var filteredProducts = products;
 
       if (entities.containsKey('stock_filter')) {
@@ -88,14 +147,14 @@ class InventoryHandler implements IntentHandler {
         final filter = entities['price_filter'].toString();
         if (filter.startsWith('<')) {
           final threshold = double.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.price < threshold).toList();
+          filteredProducts = filteredProducts.where((p) => p.sellingPrice < threshold).toList();
         } else if (filter.startsWith('>')) {
           final threshold = double.tryParse(filter.substring(1)) ?? 0;
-          filteredProducts = filteredProducts.where((p) => p.price > threshold).toList();
+          filteredProducts = filteredProducts.where((p) => p.sellingPrice > threshold).toList();
         } else {
           // Default to less than if no prefix
           final threshold = double.tryParse(filter) ?? 99999.0;
-          filteredProducts = filteredProducts.where((p) => p.price < threshold).toList();
+          filteredProducts = filteredProducts.where((p) => p.sellingPrice < threshold).toList();
         }
       }
 
@@ -119,10 +178,10 @@ class InventoryHandler implements IntentHandler {
             filteredProducts.sort((a, b) => b.stockCount.compareTo(a.stockCount));
             break;
           case 'price_asc':
-            filteredProducts.sort((a, b) => a.price.compareTo(b.price));
+            filteredProducts.sort((a, b) => a.sellingPrice.compareTo(b.sellingPrice));
             break;
           case 'price_desc':
-            filteredProducts.sort((a, b) => b.price.compareTo(a.price));
+            filteredProducts.sort((a, b) => b.sellingPrice.compareTo(a.sellingPrice));
             break;
         }
       }

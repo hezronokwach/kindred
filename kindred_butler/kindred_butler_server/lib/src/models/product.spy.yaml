@@ -3,9 +3,15 @@ table: products
 fields:
   name: String
   stockCount: int
-  price: double
+  sellingPrice: double
+  costPrice: double
+  brand: String
+  sku: String?
+  unit: String, default='pair'
+  minStockThreshold: int, default=5
   imageUrl: String?
   category: String?
+  supplierId: int?, relation(parent=suppliers)
   createdAt: DateTime, default=now
 indexes:
   product_name_idx:
@@ -14,3 +20,5 @@ indexes:
     fields: category
   product_stock_idx:
     fields: stockCount
+  product_brand_idx:
+    fields: brand

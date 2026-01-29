@@ -143,7 +143,9 @@ class TestEndpoint extends Endpoint {
         final newProduct = Product(
           name: 'Test Product',
           stockCount: 1,
-          price: 99.99,
+          sellingPrice: 99.99,
+          costPrice: 50.00,
+          brand: 'Test Brand',
           category: 'test',
         );
         
@@ -197,6 +199,7 @@ class TestEndpoint extends Endpoint {
       final testExpense = Expense(
         category: 'Test Supplier',
         amount: 50.0,
+        type: 'expense',
         date: DateTime.now(),
       );
       

@@ -1,0 +1,11 @@
+class: Supplier
+table: suppliers
+fields:
+  name: String
+  contactPerson: String?
+  email: String?
+  phone: String?
+  leadTimeDays: int, default=3
+indexes:
+  supplier_name_idx:
+    fields: name

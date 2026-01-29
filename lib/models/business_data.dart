@@ -48,6 +48,9 @@ class AccountHelper {
     final expense = client.Expense(
       category: supplier,
       amount: amount,
+      type: 'expense',
+      productName: productName,
+      description: description,
       date: DateTime.now(),
     );
     

@@ -3,6 +3,8 @@ import 'package:kindred_butler_client/kindred_butler_client.dart';
 class ServerpodService {
   static late Client _client;
   
+  static Client get client => _client;
+  
   static Future<void> initialize(String serverUrl) async {
     _client = Client(serverUrl);
     await _initializeSampleData();
