@@ -94,7 +94,10 @@ class FinanceHandler implements IntentHandler {
           uiMode: UIMode.chart,
           headerText: '💰 Profit Analysis',
           narrative: 'You have generated **\$${profit.toStringAsFixed(0)}** in profit${productName.isNotEmpty ? ' from $productName' : ''} on revenue of \$${totalRevenue.toStringAsFixed(0)}. Your current margin is **${margin.toStringAsFixed(1)}%**.',
-          data: {'expenses': relevantSales},
+          data: {
+            'expenses': relevantSales,
+            'is_trend': true,
+          },
           confidence: 1.0,
         );
       }
@@ -113,7 +116,10 @@ class FinanceHandler implements IntentHandler {
           uiMode: UIMode.chart,
           headerText: '📊 Spending Trend',
           narrative: 'Your operational spending this month (\$${thisMonth.toStringAsFixed(0)}) has $trend **${percentage.toStringAsFixed(1)}%** compared to last month (\$${lastMonth.toStringAsFixed(0)}).',
-          data: {'expenses': expenses.where((e) => e.type == 'expense').toList()},
+          data: {
+            'expenses': expenses.where((e) => e.type == 'expense').toList(),
+            'is_trend': true,
+          },
           confidence: 1.0,
         );
       }
