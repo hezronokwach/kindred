@@ -124,6 +124,65 @@ class FinanceHandler implements IntentHandler {
         );
       }
 
+      if (entities.containsKey('predict_expenses') || entities.containsKey('predict_revenue')) {
+        final isRevenue = entities.containsKey('predict_revenue');
+        final type = isRevenue ? 'sale' : 'expense';
+        final now = DateTime.now();
+        // Get last 30 days data
+        final last30Days = expenses.where((e) => 
+          e.type == type && 
+          e.date.isAfter(now.subtract(const Duration(days: 30)))
+        ).toList();
+
+        final totalAmount = last30Days.fold(0.0, (sum, e) => sum + e.amount);
+        final dailyAverage = totalAmount / 30; // Simple linear projection
+        final nextMonthProjection = dailyAverage * 30;
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.narrative,
+          headerText: isRevenue ? '🔮 Revenue Forecast' : '🔮 Expense Forecast',
+          narrative: 'Based on the last 30 days, your projected ${isRevenue ? 'revenue' : 'expenses'} for next month is **\$${nextMonthProjection.toStringAsFixed(0)}** (avg \$${dailyAverage.toStringAsFixed(0)}/day).',
+          data: {},
+          confidence: 1.0,
+        );
+      }
+
+      if (entities.containsKey('compare_weekly')) {
+        final now = DateTime.now();
+        final startOfThisWeek = now.subtract(Duration(days: now.weekday - 1));
+        final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
+        
+        // Group by Day of Week (Monday=1, Sunday=7)
+        Map<int, double> thisWeek = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0};
+        Map<int, double> lastWeek = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0};
+
+        for (var e in expenses.where((x) => x.type == 'expense')) {
+          if (e.date.isAfter(startOfThisWeek)) {
+            thisWeek[e.date.weekday] = (thisWeek[e.date.weekday] ?? 0) + e.amount;
+          } else if (e.date.isAfter(startOfLastWeek) && e.date.isBefore(startOfThisWeek)) {
+            lastWeek[e.date.weekday] = (lastWeek[e.date.weekday] ?? 0) + e.amount;
+          }
+        }
+
+        final thisWeekTotal = thisWeek.values.fold(0.0, (sum, v) => sum + v);
+        final lastWeekTotal = lastWeek.values.fold(0.0, (sum, v) => sum + v);
+        final diff = thisWeekTotal - lastWeekTotal;
+
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.chart,
+          headerText: '📅 Weekly Comparison',
+          narrative: 'You have spent **\$${thisWeekTotal.toStringAsFixed(0)}** this week vs **\$${lastWeekTotal.toStringAsFixed(0)}** last week (${diff >= 0 ? '+' : ''}\$${diff.toStringAsFixed(0)}).',
+          data: {
+            'this_week': thisWeek,
+            'last_week': lastWeek,
+            'is_comparison': true,
+          },
+          confidence: 1.0,
+        );
+      }
+
       var filteredExpenses = expenses;
       
       if (entities.containsKey('time_filter')) {
