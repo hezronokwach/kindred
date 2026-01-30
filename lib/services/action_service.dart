@@ -8,9 +8,50 @@ class ActionService {
     Map<String, dynamic> actionData
   ) async {
     final productId = actionData['product_id'] as String?;
-    final productName = actionData['product_name'] as String;
+    final productName = actionData['product_name'] as String? ?? 'Unknown Product';
     
     switch (actionType) {
+      case 'addSale':
+        final quantity = actionData['quantity'] as int;
+        // Fetch fresh product data
+        final products = await BusinessData.getProducts();
+        final product = products.firstWhere(
+          (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
+          orElse: () => products.first,
+        );
+        
+        await AccountHelper.recordSale(
+          product: product, 
+          quantity: quantity,
+        );
+        
+        final newBalance = await AccountHelper.getAvailableFunds();
+        return morphic.MorphicState(
+          intent: morphic.Intent.retail,
+          uiMode: morphic.UIMode.narrative,
+          narrative: 'Sale recorded! Sold $quantity units of ${product.name}. Added \$${(product.sellingPrice * quantity).toStringAsFixed(2)} to balance. New balance: \$${newBalance.toStringAsFixed(2)}',
+          headerText: 'Success',
+          confidence: 1.0,
+        );
+
+      case 'addExpense':
+        final amount = actionData['amount'] as double;
+        final category = actionData['category'] as String;
+        
+        await AccountHelper.recordExpense(
+          amount: amount, 
+          category: category,
+        );
+        
+        final newBalance = await AccountHelper.getAvailableFunds();
+        return morphic.MorphicState(
+          intent: morphic.Intent.finance,
+          uiMode: morphic.UIMode.narrative,
+          narrative: 'Expense recorded! \$${amount.toStringAsFixed(2)} for $category has been added. New balance: \$${newBalance.toStringAsFixed(2)}',
+          headerText: 'Success',
+          confidence: 1.0,
+        );
+
       case 'updateStock':
         final quantity = actionData['quantity'] as int;
         final currentStock = actionData['current_stock'] as int;

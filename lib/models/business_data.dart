@@ -56,7 +56,55 @@ class AccountHelper {
     
     await ServerpodService.addExpense(expense);
   }
+
+  static Future<void> recordExpense({
+    required double amount, 
+    required String category, 
+    String? description
+  }) async {
+    final result = await ServerpodService.subtractFromBalance(amount);
+    if (result == null) {
+      throw Exception('Insufficient funds');
+    }
+    
+    final expense = client.Expense(
+      category: category,
+      amount: amount,
+      type: 'expense',
+      productName: null,
+      description: description ?? 'Operational expense for $category',
+      date: DateTime.now(),
+    );
+    
+    await ServerpodService.addExpense(expense);
+  }
   
+  static Future<void> recordSale({
+    required client.Product product,
+    required int quantity,
+  }) async {
+    final totalAmount = product.sellingPrice * quantity;
+    
+    // 1. Add funds to balance
+    await ServerpodService.addToBalance(totalAmount);
+    
+    // 2. Subtract from stock
+    final newStock = product.stockCount - quantity;
+    await ServerpodService.updateProductStock(product.id!, newStock);
+    
+    // 3. Record transaction as a 'sale' expense
+    final saleRecord = client.Expense(
+      category: product.category ?? 'Sales',
+      amount: totalAmount,
+      type: 'sale',
+      productName: product.name,
+      description: 'Sold $quantity units of ${product.name}',
+      date: DateTime.now(),
+    );
+    
+    await ServerpodService.addExpense(saleRecord);
+  }
+
   static Future<bool> canAfford(double amount) async {
     final balance = await getAvailableFunds();
     return balance >= amount;

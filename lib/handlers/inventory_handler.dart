@@ -19,7 +19,6 @@ class InventoryHandler implements IntentHandler {
     Map<String, dynamic> data = {};
     String? actionType;
 
-    print('InventoryHandler: Intent: $intent, Entities: $entities, Product count: ${products.length}');
 
     if (intent == Intent.updateStock || intent == Intent.deleteProduct || intent == Intent.addProduct) {
       actionType = intent.name;

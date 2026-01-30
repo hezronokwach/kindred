@@ -22,10 +22,31 @@ class ShortcutHandler implements IntentHandler {
       final now = DateTime.now();
       
       // Component 1: Daily Sales
-      final dailySales = expenses.where((e) => 
+      final currentSalesRods = expenses.where((e) => 
         e.type == 'sale' && 
         e.date.year == now.year && e.date.month == now.month && e.date.day == now.day
-      ).fold(0.0, (sum, e) => sum + e.amount);
+      ).toList();
+      final dailySales = currentSalesRods.fold(0.0, (sum, e) => sum + e.amount);
+
+      // Component 3: Daily Expenses
+      final currentExpenseRods = expenses.where((e) => 
+        e.type == 'expense' && 
+        e.date.year == now.year && e.date.month == now.month && e.date.day == now.day
+      ).toList();
+      final dailyExpenses = currentExpenseRods.fold(0.0, (sum, e) => sum + e.amount);
+
+      // Component 4: Daily Profit
+      double dailyProfit = 0;
+      for (var sale in currentSalesRods) {
+        final product = products.firstWhere(
+          (p) => p.name.toLowerCase() == sale.productName?.toLowerCase(),
+          orElse: () => products.firstWhere((p) => p.name.contains(sale.productName ?? ''), orElse: () => products.first),
+        );
+        // Profit = sellingPrice - costPrice for that specific item
+        final profitPerUnit = product.sellingPrice - product.costPrice;
+        final unitsSold = sale.amount / product.sellingPrice;
+        dailyProfit += profitPerUnit * unitsSold;
+      }
 
       // Component 2: Smart Reorder (Urgent Items)
       final lowStockItems = products.where((p) => p.stockCount <= p.minStockThreshold).toList();
@@ -34,20 +55,26 @@ class ShortcutHandler implements IntentHandler {
         intent: intent,
         uiMode: UIMode.dashboard,
         headerText: '🌞 Daily Briefing',
-        narrative: 'Here is your morning update. You have generated **\$${dailySales.toStringAsFixed(0)}** in sales today. There are **${lowStockItems.length}** items needing attention.',
+        narrative: 'Here is your morning update. You have generated **\$${dailySales.toStringAsFixed(0)}** in sales with a net profit of **\$${dailyProfit.toStringAsFixed(0)}**. Daily expenses are at **\$${dailyExpenses.toStringAsFixed(0)}**.',
         data: {
           'components': [
             {
-              'type': 'table',
-              'title': '🚨 Urgent Restock Needed',
-              'data': lowStockItems,
+              'type': 'chart',
+              'title': 'Sales (Today): \$${dailySales.toStringAsFixed(2)}',
+              'data': currentSalesRods,
+              'is_trend': true,
             },
             {
               'type': 'chart',
-              'title': '💰 Today\'s Sales Trend',
-              'data': expenses.where((e) => e.type == 'sale' && e.date.year == now.year && e.date.month == now.month && e.date.day == now.day).toList(),
-              'is_trend': true, // Use line chart for intraday if possible, or bar for categories
-            }
+              'title': 'Operational Expenses (Today): \$${dailyExpenses.toStringAsFixed(2)}',
+              'data': currentExpenseRods,
+              'is_trend': false,
+            },
+            {
+              'type': 'table',
+              'title': 'Restock Required',
+              'data': lowStockItems,
+            },
           ]
         },
         confidence: 1.0,

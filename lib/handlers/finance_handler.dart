@@ -18,7 +18,6 @@ class FinanceHandler implements IntentHandler {
   }) async {
     Map<String, dynamic> data = {};
     
-    print('FinanceHandler: Intent: $intent, Entities: $entities, Expense count: ${expenses.length}');
 
     if (intent == Intent.accountBalance) {
       final productName = entities['product_name']?.toString();
@@ -150,7 +149,8 @@ class FinanceHandler implements IntentHandler {
 
       if (entities.containsKey('compare_weekly')) {
         final now = DateTime.now();
-        final startOfThisWeek = now.subtract(Duration(days: now.weekday - 1));
+        final today = DateTime(now.year, now.month, now.day);
+        final startOfThisWeek = today.subtract(Duration(days: today.weekday - 1));
         final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
         
         // Group by Day of Week (Monday=1, Sunday=7)
@@ -178,6 +178,63 @@ class FinanceHandler implements IntentHandler {
             'this_week': thisWeek,
             'last_week': lastWeek,
             'is_comparison': true,
+          },
+          confidence: 1.0,
+        );
+      }
+
+      if (entities.containsKey('calculate_total')) {
+        final timeFilterRaw = entities['time_filter']?.toString().toLowerCase().replaceAll(' ', '_') ?? 'today';
+        final now = DateTime.now();
+        List<client.Expense> periodExpenses = [];
+        String periodName = '';
+
+        if (timeFilterRaw == 'today') {
+          periodExpenses = expenses.where((e) => e.type == 'expense' && e.date.year == now.year && e.date.month == now.month && e.date.day == now.day).toList();
+          periodName = 'today';
+        } else if (timeFilterRaw == 'this_week' || timeFilterRaw == 'week' || timeFilterRaw == 'last_7_days') {
+          final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+          periodExpenses = expenses.where((e) => e.type == 'expense' && e.date.isAfter(startOfWeek)).toList();
+          periodName = 'this week';
+        } else if (timeFilterRaw == 'this_month' || timeFilterRaw == 'month') {
+          periodExpenses = expenses.where((e) => e.type == 'expense' && e.date.month == now.month && e.date.year == now.year).toList();
+          periodName = 'this month';
+        } else {
+          // Default fallback
+          periodExpenses = expenses.where((e) => e.type == 'expense').toList();
+          periodName = 'all time';
+        }
+
+        final total = periodExpenses.fold(0.0, (sum, e) => sum + e.amount);
+        
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.chart,
+          headerText: '💰 Total Expenses',
+          narrative: 'Your total business expenses for **$periodName** are **\$${total.toStringAsFixed(2)}**.',
+          data: {
+            'expenses': periodExpenses,
+            'is_trend': periodExpenses.length > 1,
+          },
+          confidence: 1.0,
+        );
+      }
+
+      if (entities.containsKey('add_expense')) {
+        final amount = entities['amount'];
+        final category = entities['category']?.toString() ?? 'Utilities';
+        
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.action,
+          headerText: 'Record Expense',
+          narrative: 'Confirming operational expense for **$category**.',
+          data: {
+            'action_type': 'addExpense',
+            'action_data': {
+              'amount': amount is num ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0.0,
+              'category': category,
+            },
           },
           confidence: 1.0,
         );

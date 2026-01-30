@@ -79,42 +79,33 @@ Specific Rules:
 - "Add product [Name]" -> return intent "addProduct", ui_mode "action", entities {"product_name":"...", "price":..., "quantity":...}.
 - "Show Nike" -> return intent "retail", ui_mode "image", entities {"product_name":"Nike"}.
 - "Show inventory" or "What do we have" -> get_products. Then return intent "inventory", ui_mode "table".
-- "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode "chart".
+- "Show expenses" or "finance summary" -> get_expenses. Then return intent "finance", ui_mode: "chart".
 - "When will Nike run out" -> get_products + get_expenses. Entities: {"product_name": "Nike", "predict_stock": true}.
 - "What should I reorder" -> get_products + get_expenses. Entities: {"smart_reorder": true}.
 - "Am I spending more this month" -> get_expenses. Entities: {"trend_analysis": true}.
 - "How much profit on Nike" -> get_products + get_expenses. Entities: {"product_name": "Nike", "profit_analysis": true}.
+- "Total expenses for [Time]" -> get_expenses. Entities: {"calculate_total": true, "time_filter": "[Time]"}. Time: today, this week, this month.
 
-- "How much profit on Nike" -> get_products + get_expenses. Entities: {"product_name": "Nike", "profit_analysis": true}.
+Recording Sales & Expenses:
+- "Record an expense of [Amount] for [Category]" -> return intent: "finance", ui_mode: "action", entities: {"add_expense": true, "amount": [Amount], "category": "[Category]"}.
+- "Record a sale of [Quantity] [Product]" -> get_products. Then return intent: "retail", ui_mode: "action", entities: {"add_sale": true, "product_name": "[Product]", "quantity": [Quantity]}.
+- "I sold [Quantity] [Product]" -> get_products. Then return intent: "retail", ui_mode: "action", entities: {"add_sale": true, "product_name": "[Product]", "quantity": [Quantity]}.
 
-Next Month Predictions & Comparisons:
+Predictions & Comparisons:
 - "Predict expenses/revenue" -> get_expenses. Entities: {"predict_expenses": true} OR {"predict_revenue": true}.
-- "Compare spending this week vs last week" -> get_expenses. Entities: {"compare_weekly": true}.
+- "Compare spending this week vs last week" -> get_expenses. Entities: {"compare_weekly": true}. Intent: "finance", ui_mode: "chart".
 
 Alerts:
 - "Alert me when stock for Nike < 10" -> Entities: {"create_alert": true, "alert_type": "stock", "product_filter": "Nike", "threshold": 10, "comparison": "lt"}. Intent: "alert".
-- "Alert me when any stock < 5" -> Entities: {"create_alert": true, "alert_type": "stock", "threshold": 5}. Intent: "alert".
 - "Check alerts" -> get_products + get_expenses. Entities: {"check_alerts": true}. Intent: "alert".
 
 Shortcuts & Routines:
 - "Run daily routine" -> get_products + get_expenses. Entities: {"run_daily_routine": true}. Intent: "shortcut".
 - "Run weekly routine" -> get_expenses + get_products. Entities: {"run_weekly_routine": true}. Intent: "shortcut".
 
-Extremum Queries (Lowest/Highest):
-- "Cheapest product" -> get_products. Entities: {"sort_by": "price_asc", "limit": 1}.
-- "Most expensive product" -> get_products. Entities: {"sort_by": "price_desc", "limit": 1}.
-- "Lowest stock shoe" -> get_products. Entities: {"sort_by": "stock_asc", "limit": 1}.
-- "Highest stock shoe" -> get_products. Entities: {"sort_by": "stock_desc", "limit": 1}.
-- "Category with highest spending" -> get_expenses. Entities: {"category_extremum": "highest"}.
-- Narrative MUST mention the specific product/category name and its value.
-- IMPORTANT: Do NOT extract generic words like "product", "item", "shoe", or "expense" into "product_name" or "category_filter". Use these entities ONLY for specific names (e.g., "Nike", "Adidas", "Food").
-- For "lowest/highest" queries, use "sort_by" and "limit": 1 as shown above.
-
 Filtering & Sorting Entities:
 - Inventory: "stock_filter" ("<10", ">5"), "price_filter" ("<100", ">50"), "product_name" (search), "sort_by" ("stock_asc", "stock_desc", "price_asc", "price_desc").
 - Finance: "time_filter" ("today", "last_week", "last_month"), "product_filter" (search), "category_filter" (search), "sort_by" ("amount_asc", "amount_desc", "date_asc", "date_desc").
-- Example: "Show low stock products" -> entities {"stock_filter": "<10"}.
-- Example: "Sort by price descending" -> entities {"sort_by": "price_desc"}.
 
 - Use tool data. Never say "I will check" in the final JSON narrative; provide the actual answer.
 - If intent="shortcut", ensure ui_mode is "dashboard" in your thought process (handled by backend).''';
@@ -263,8 +254,8 @@ Filtering & Sorting Entities:
   Future<morphic.MorphicState> _parseResponse(Map<String, dynamic> response, List<client.Product> products, List<client.Expense> expenses) async {
     final intentStr = response['intent'] ?? 'unknown';
     final uiModeStr = response['ui_mode'] ?? 'narrative';
-    final narrative = response['narrative'] ?? 'I\'m not sure how to help with that.';
-    final headerText = response['header_text'];
+    final String narrative = response['narrative'] as String? ?? 'I\'m not sure how to help with that.';
+    final String? headerText = response['header_text'] as String?;
     final confidence = (response['confidence'] ?? 1.0).toDouble();
     final entitiesRaw = response['entities'];
     final Map<String, dynamic> entities = entitiesRaw is Map<String, dynamic> ? entitiesRaw : {};

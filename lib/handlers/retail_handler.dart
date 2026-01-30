@@ -17,6 +17,33 @@ class RetailHandler implements IntentHandler {
   }) async {
     Map<String, dynamic> data = {};
 
+    if (entities.containsKey('add_sale')) {
+      final productName = entities['product_name']?.toString() ?? '';
+      final product = products.firstWhere(
+        (p) => p.name.toLowerCase().contains(productName.toLowerCase()),
+        orElse: () => products.first,
+      );
+      
+      final quantity = int.tryParse(entities['quantity']?.toString() ?? '1') ?? 1;
+
+      data['action_type'] = 'addSale';
+      data['action_data'] = {
+        'product_name': product.name,
+        'product_id': product.id?.toString() ?? '0',
+        'quantity': quantity,
+        'price': product.sellingPrice,
+      };
+      
+      return MorphicState(
+        intent: intent,
+        uiMode: UIMode.action,
+        headerText: 'Record Sale',
+        narrative: 'Confirming sale of $quantity units of **${product.name}**.',
+        data: data,
+        confidence: 1.0,
+      );
+    }
+
     if (intent == Intent.retail && entities.containsKey('product_name') && products.isNotEmpty) {
       final productName = entities['product_name'].toString();
       final product = products.firstWhere(
