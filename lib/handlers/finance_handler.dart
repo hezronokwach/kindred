@@ -183,6 +183,26 @@ class FinanceHandler implements IntentHandler {
         );
       }
 
+      if (entities.containsKey('add_expense')) {
+        final amount = entities['amount'];
+        final category = entities['category']?.toString() ?? 'Utilities';
+        
+        return MorphicState(
+          intent: intent,
+          uiMode: UIMode.action,
+          headerText: 'Record Expense',
+          narrative: 'Confirming operational expense for **$category**.',
+          data: {
+            'action_type': 'addExpense',
+            'action_data': {
+              'amount': amount is num ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0.0,
+              'category': category,
+            },
+          },
+          confidence: 1.0,
+        );
+      }
+
       var filteredExpenses = expenses;
       
       if (entities.containsKey('time_filter')) {

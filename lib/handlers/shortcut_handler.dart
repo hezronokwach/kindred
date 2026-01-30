@@ -27,6 +27,12 @@ class ShortcutHandler implements IntentHandler {
         e.date.year == now.year && e.date.month == now.month && e.date.day == now.day
       ).fold(0.0, (sum, e) => sum + e.amount);
 
+      // Component 3: Daily Expenses
+      final dailyExpenses = expenses.where((e) => 
+        e.type == 'expense' && 
+        e.date.year == now.year && e.date.month == now.month && e.date.day == now.day
+      ).fold(0.0, (sum, e) => sum + e.amount);
+
       // Component 2: Smart Reorder (Urgent Items)
       final lowStockItems = products.where((p) => p.stockCount <= p.minStockThreshold).toList();
 
@@ -34,7 +40,7 @@ class ShortcutHandler implements IntentHandler {
         intent: intent,
         uiMode: UIMode.dashboard,
         headerText: '🌞 Daily Briefing',
-        narrative: 'Here is your morning update. You have generated **\$${dailySales.toStringAsFixed(0)}** in sales today. There are **${lowStockItems.length}** items needing attention.',
+        narrative: 'Here is your morning update. You have generated **\$${dailySales.toStringAsFixed(0)}** in sales today with **\$${dailyExpenses.toStringAsFixed(0)}** in operational costs. There are **${lowStockItems.length}** items needing attention.',
         data: {
           'components': [
             {
