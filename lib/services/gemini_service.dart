@@ -263,8 +263,8 @@ Filtering & Sorting Entities:
   Future<morphic.MorphicState> _parseResponse(Map<String, dynamic> response, List<client.Product> products, List<client.Expense> expenses) async {
     final intentStr = response['intent'] ?? 'unknown';
     final uiModeStr = response['ui_mode'] ?? 'narrative';
-    final narrative = response['narrative'] ?? 'I\'m not sure how to help with that.';
-    final headerText = response['header_text'];
+    final String narrative = response['narrative'] as String? ?? 'I\'m not sure how to help with that.';
+    final String? headerText = response['header_text'] as String?;
     final confidence = (response['confidence'] ?? 1.0).toDouble();
     final entitiesRaw = response['entities'];
     final Map<String, dynamic> entities = entitiesRaw is Map<String, dynamic> ? entitiesRaw : {};

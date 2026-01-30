@@ -39,7 +39,7 @@ class AlertHandler implements IntentHandler {
       return MorphicState(
         intent: intent,
         uiMode: UIMode.narrative,
-        headerText: '🔔 Alert Created',
+        headerText: 'Alert Created',
         narrative: 'I will alert you when ${productFilter != null ? '$productFilter stock' : 'any stock'} drops below ${threshold.toInt()}.',
         confidence: 1.0,
       );
@@ -63,7 +63,7 @@ class AlertHandler implements IntentHandler {
             );
             
             if (_checkThreshold(product.stockCount.toDouble(), alert.threshold, alert.comparison)) {
-              activeAlerts.add('⚠️ **${product.name}** stock is ${product.stockCount} (threshold: ${alert.threshold.toInt()})');
+              activeAlerts.add('**${product.name}** stock is ${product.stockCount} (threshold: ${alert.threshold.toInt()})');
             }
           } else {
             // General stock alert (any product)
@@ -81,7 +81,7 @@ class AlertHandler implements IntentHandler {
               .fold(0.0, (sum, e) => sum + e.amount);
           
           if (_checkThreshold(thisMonthExpense, alert.threshold, alert.comparison)) {
-            activeAlerts.add('💸 **High Spending**: \$${thisMonthExpense.toStringAsFixed(0)} this month (threshold: \$${alert.threshold.toInt()})');
+            activeAlerts.add('**High Spending**: \$${thisMonthExpense.toStringAsFixed(0)} this month (threshold: \$${alert.threshold.toInt()})');
           }
         }
       }
@@ -99,7 +99,7 @@ class AlertHandler implements IntentHandler {
       return MorphicState(
         intent: intent,
         uiMode: UIMode.narrative,
-        headerText: '🚨 Active Alerts',
+        headerText: 'Active Alerts',
         narrative: activeAlerts.join('\n\n'),
         confidence: 1.0,
       );
