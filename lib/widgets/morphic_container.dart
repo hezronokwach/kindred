@@ -8,6 +8,7 @@ import 'finance_chart.dart';
 import 'product_image_card.dart';
 import 'action_card.dart';
 import 'glassmorphic_card.dart';
+import 'markdown_text.dart';
 import 'package:kindred_butler_client/kindred_butler_client.dart' as client;
 
 class MorphicContainer extends StatelessWidget {
@@ -181,51 +182,51 @@ class MorphicContainer extends StatelessWidget {
   }
 
   Widget _buildNarrativeView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (state.narrative.isEmpty) ...[
-              _buildWelcomeAnimation(),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (state.narrative.isEmpty) ...[
+            _buildWelcomeAnimation(),
+          ] else ...[
+            if (state.confidence < 0.7 && state.intent == morphic.Intent.unknown) ...[
+              const Icon(Icons.help_outline, size: 56, color: AppColors.amber),
+              const SizedBox(height: 24),
+              Text(
+                "Business Query Unclear",
+                style: AppTypography.title,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "I couldn't confidently interpret that request. Could you please specify if you're asking about inventory or finances?",
+                style: AppTypography.body.copyWith(color: AppColors.gray400),
+                textAlign: TextAlign.center,
+              ),
             ] else ...[
-              if (state.confidence < 0.7 && state.intent == morphic.Intent.unknown) ...[
-                const Icon(Icons.help_outline, size: 56, color: AppColors.amber),
-                const SizedBox(height: 24),
-                Text(
-                  "Business Query Unclear",
-                  style: AppTypography.title,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "I couldn't confidently interpret that request. Could you please specify if you're asking about inventory or finances?",
-                  style: AppTypography.body.copyWith(color: AppColors.gray400),
-                  textAlign: TextAlign.center,
-                ),
-              ] else ...[
-                GlassmorphicCard(
-                  child: Text(
-                    state.narrative,
-                    style: AppTypography.body.copyWith(
-                      fontSize: 18,
-                      color: AppColors.white.withOpacity(0.9),
-                      height: 1.5,
-                      shadows: [
-                         Shadow(
-                           color: AppColors.emeraldPrimary.withOpacity(0.3),
-                           blurRadius: 10,
-                         ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
+              GlassmorphicCard(
+                child: MarkdownText(
+                  state.narrative,
+                  style: AppTypography.body.copyWith(
+                    fontSize: 18,
+                    color: AppColors.white.withOpacity(0.9),
+                    height: 1.5,
+                    shadows: [
+                       Shadow(
+                         color: AppColors.emeraldPrimary.withOpacity(0.3),
+                         blurRadius: 10,
+                       ),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              ],
+              ),
             ],
           ],
-        ),
+        ],
       ),
     );
   }
@@ -245,7 +246,7 @@ class MorphicContainer extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.emeraldPrimary.withValues(alpha: 0.1 * value),
+                    color: AppColors.emeraldPrimary.withOpacity(0.1 * value),
                     blurRadius: 60,
                     spreadRadius: 20 * value,
                   ),
@@ -258,7 +259,7 @@ class MorphicContainer extends StatelessWidget {
                   child: Icon(
                     Icons.auto_awesome_outlined, 
                     size: 56, 
-                    color: AppColors.emeraldPrimary.withValues(alpha: 0.3 + 0.7 * value),
+                    color: AppColors.emeraldPrimary.withOpacity(0.3 + 0.7 * value),
                   ),
                 ),
               ),

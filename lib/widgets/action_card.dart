@@ -5,6 +5,7 @@ import '../utils/app_colors.dart';
 import '../utils/app_typography.dart';
 import '../utils/app_animations.dart';
 import 'glassmorphic_card.dart';
+import 'markdown_text.dart';
 
 class ActionCard extends StatelessWidget {
   final String actionType;
@@ -28,12 +29,13 @@ class ActionCard extends StatelessWidget {
         final canAfford = snapshot.data ?? true;
         
         return Center(
-          child: GlassmorphicCard(
-            margin: const EdgeInsets.all(24.0),
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          child: SingleChildScrollView(
+            child: GlassmorphicCard(
+              margin: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 TweenAnimationBuilder<double>(
                   duration: AppAnimations.slow,
                   tween: Tween(begin: 0.0, end: 1.0),
@@ -71,7 +73,7 @@ class ActionCard extends StatelessWidget {
                 FutureBuilder<String>(
                   future: _getDescription(),
                   builder: (context, descSnapshot) {
-                    return Text(
+                    return MarkdownText(
                       descSnapshot.data ?? 'Analyzing request...',
                       style: AppTypography.body.copyWith(
                         color: AppColors.gray400,
@@ -153,10 +155,11 @@ class ActionCard extends StatelessWidget {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   Future<bool> _checkAffordability() async {
     if (actionType == 'updateStock' || actionType == 'addProduct') {
