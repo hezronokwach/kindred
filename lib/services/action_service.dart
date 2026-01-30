@@ -8,9 +8,27 @@ class ActionService {
     Map<String, dynamic> actionData
   ) async {
     final productId = actionData['product_id'] as String?;
-    final productName = actionData['product_name'] as String;
+    final productName = actionData['product_name'] as String? ?? 'Unknown Product';
     
     switch (actionType) {
+      case 'addExpense':
+        final amount = actionData['amount'] as double;
+        final category = actionData['category'] as String;
+        
+        await AccountHelper.recordExpense(
+          amount: amount, 
+          category: category,
+        );
+        
+        final newBalance = await AccountHelper.getAvailableFunds();
+        return morphic.MorphicState(
+          intent: morphic.Intent.finance,
+          uiMode: morphic.UIMode.narrative,
+          narrative: 'Expense recorded! \$${amount.toStringAsFixed(2)} for $category has been added. New balance: \$${newBalance.toStringAsFixed(2)}',
+          headerText: 'Success',
+          confidence: 1.0,
+        );
+
       case 'updateStock':
         final quantity = actionData['quantity'] as int;
         final currentStock = actionData['current_stock'] as int;

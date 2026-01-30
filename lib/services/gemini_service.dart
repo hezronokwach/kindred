@@ -89,7 +89,11 @@ Specific Rules:
 
 Next Month Predictions & Comparisons:
 - "Predict expenses/revenue" -> get_expenses. Entities: {"predict_expenses": true} OR {"predict_revenue": true}.
-- "Compare spending this week vs last week" -> get_expenses. Entities: {"compare_weekly": true}.
+- "Compare spending this week vs last week" or "How is my spending compared to last week" -> get_expenses. Entities: {"compare_weekly": true}. Intent: "finance", ui_mode: "chart".
+
+Recording Expenses:
+- "Record an expense of [Amount] for [Category]" -> return intent: "finance", ui_mode: "action", entities: {"add_expense": true, "amount": [Amount], "category": "[Category]"}.
+- "I spent [Amount] on [Category]" -> return intent: "finance", ui_mode: "action", entities: {"add_expense": true, "amount": [Amount], "category": "[Category]"}.
 
 Alerts:
 - "Alert me when stock for Nike < 10" -> Entities: {"create_alert": true, "alert_type": "stock", "product_filter": "Nike", "threshold": 10, "comparison": "lt"}. Intent: "alert".
