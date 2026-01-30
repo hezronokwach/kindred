@@ -14,7 +14,7 @@ class ServerpodService {
     try {
       await _client.seed.seedDatabase();
     } catch (e) {
-      print('Seeding failed: $e');
+      // Seeding failure
     }
   }
 
@@ -23,7 +23,6 @@ class ServerpodService {
     try {
       return await _client.product.getAllProducts();
     } catch (e) {
-      print('Error fetching products: $e');
       return [];
     }
   }
@@ -32,7 +31,6 @@ class ServerpodService {
     try {
       return await _client.product.getProductById(id);
     } catch (e) {
-      print('Error fetching product: $e');
       return null;
     }
   }
@@ -41,7 +39,6 @@ class ServerpodService {
     try {
       return await _client.product.getProductsByName(name);
     } catch (e) {
-      print('Error searching products: $e');
       return [];
     }
   }
@@ -50,7 +47,6 @@ class ServerpodService {
     try {
       return await _client.product.updateStock(id, newStock);
     } catch (e) {
-      print('Error updating stock: $e');
       return null;
     }
   }
@@ -63,7 +59,6 @@ class ServerpodService {
     try {
       return await _client.product.deleteProduct(id);
     } catch (e) {
-      print('Error deleting product: $e');
       return false;
     }
   }
@@ -77,7 +72,6 @@ class ServerpodService {
       }
       return 0.0;
     } catch (e) {
-      print('Error fetching balance: $e');
       return 0.0;
     }
   }
@@ -94,7 +88,6 @@ class ServerpodService {
     try {
       return await _client.account.subtractFromBalance(amount);
     } catch (e) {
-      print('Error subtracting from balance: $e');
       return null;
     }
   }
@@ -122,7 +115,6 @@ class ServerpodService {
     try {
       return await _client.expense.getAllExpenses();
     } catch (e) {
-      print('Error fetching expenses: $e');
       return [];
     }
   }
@@ -131,7 +123,6 @@ class ServerpodService {
     try {
       return await _client.expense.getExpensesByCategory(category);
     } catch (e) {
-      print('Error fetching expenses by category: $e');
       return [];
     }
   }
@@ -144,7 +135,6 @@ class ServerpodService {
     try {
       return await _client.expense.deleteExpense(id);
     } catch (e) {
-      print('Error deleting expense: $e');
       return false;
     }
   }

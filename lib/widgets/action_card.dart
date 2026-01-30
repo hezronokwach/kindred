@@ -184,6 +184,8 @@ class ActionCard extends StatelessWidget {
         return Icons.add_business_outlined;
       case 'addExpense':
         return Icons.receipt_long_outlined;
+      case 'addSale':
+        return Icons.shopping_bag_outlined;
       default:
         return Icons.auto_awesome_outlined;
     }
@@ -199,6 +201,8 @@ class ActionCard extends StatelessWidget {
         return 'New Product';
       case 'addExpense':
         return 'Record Expense';
+      case 'addSale':
+        return 'Record Sale';
       default:
         return 'Confirm Action';
     }
@@ -208,6 +212,12 @@ class ActionCard extends StatelessWidget {
     final productName = actionData['product_name'] ?? 'Unknown Item';
     
     switch (actionType) {
+      case 'addSale':
+        final quantity = actionData['quantity'] ?? 0;
+        final price = actionData['price'] ?? 0.0;
+        return 'Record a sale for **$productName**?\n\n'
+               'Quantity: $quantity units\n'
+               'Revenue: \$${(price * quantity).toStringAsFixed(2)}';
       case 'addExpense':
         final amount = actionData['amount'] ?? 0.0;
         final category = actionData['category'] ?? 'Expenses';

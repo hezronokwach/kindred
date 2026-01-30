@@ -81,9 +81,15 @@ class MorphicContainer extends StatelessWidget {
       case morphic.UIMode.chart:
         final expenses = state.data['expenses'] as List<client.Expense>? ?? [];
         final isTrend = state.data['is_trend'] as bool? ?? false;
+        final isComparison = state.data['is_comparison'] as bool? ?? false;
         return GlassmorphicCard(
           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: FinanceChart(expenses: expenses, isTrend: isTrend),
+          child: FinanceChart(
+            expenses: expenses, 
+            isTrend: isTrend,
+            isComparison: isComparison,
+            comparisonData: state.data,
+          ),
         );
 
       case morphic.UIMode.image:
