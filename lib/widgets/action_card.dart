@@ -167,6 +167,9 @@ class ActionCard extends StatelessWidget {
       final productPrice = actionData['product_price'] ?? actionData['price'] ?? 0.0;
       final totalCost = quantity * productPrice;
       return await AccountHelper.canAfford(totalCost);
+    } else if (actionType == 'addExpense') {
+      final amount = actionData['amount'] ?? 0.0;
+      return await AccountHelper.canAfford(amount);
     }
     return true;
   }
@@ -179,6 +182,8 @@ class ActionCard extends StatelessWidget {
         return Icons.delete_outline;
       case 'addProduct':
         return Icons.add_business_outlined;
+      case 'addExpense':
+        return Icons.receipt_long_outlined;
       default:
         return Icons.auto_awesome_outlined;
     }
@@ -192,6 +197,8 @@ class ActionCard extends StatelessWidget {
         return 'Remove Item';
       case 'addProduct':
         return 'New Product';
+      case 'addExpense':
+        return 'Record Expense';
       default:
         return 'Confirm Action';
     }
@@ -201,6 +208,11 @@ class ActionCard extends StatelessWidget {
     final productName = actionData['product_name'] ?? 'Unknown Item';
     
     switch (actionType) {
+      case 'addExpense':
+        final amount = actionData['amount'] ?? 0.0;
+        final category = actionData['category'] ?? 'Expenses';
+        return 'Record a new operational expense for **$category**?\n\n'
+               'Amount: \$${amount.toStringAsFixed(2)}';
       case 'updateStock':
         final quantity = actionData['quantity'] ?? 0;
         final currentStock = actionData['current_stock'] ?? 0;

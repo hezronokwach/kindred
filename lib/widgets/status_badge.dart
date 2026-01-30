@@ -14,11 +14,11 @@ class StatusBadge extends StatelessWidget {
 
   factory StatusBadge.stock(int stock) {
     if (stock <= 5) {
-      return const StatusBadge(label: 'Low Stock', color: AppColors.rose);
+      return StatusBadge(label: '$stock LOW', color: AppColors.rose);
     } else if (stock <= 20) {
-      return const StatusBadge(label: 'Medium', color: AppColors.amber);
+      return StatusBadge(label: '$stock NORMAL', color: AppColors.amber);
     } else {
-      return const StatusBadge(label: 'In Stock', color: AppColors.emeraldPrimary);
+      return StatusBadge(label: '$stock IN STOCK', color: AppColors.emeraldPrimary);
     }
   }
 

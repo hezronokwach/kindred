@@ -120,7 +120,7 @@ class FinanceChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: lastWeek[day] ?? 0,
-                  color: AppColors.slateLight.withOpacity(0.4),
+                  color: AppColors.slateLight.withOpacity(0.8),
                   width: 10,
                   borderRadius: BorderRadius.circular(4),
                 ),
